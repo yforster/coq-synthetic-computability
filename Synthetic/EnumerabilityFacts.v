@@ -222,6 +222,27 @@ Proof.
     rewrite? E' in *. destruct H as [? [= <- <-]]. congruence. destruct H as [? [=]].
 Qed.
 
+Lemma mu_enumerable {X} {p : nat -> X -> Prop} :
+  discrete X ->
+  enumerable (uncurry p) ->
+  inhabited (forall n, (exists x, p n x) -> ∑ x, p n x).
+Proof.
+  intros [D] % discrete_iff [e He].
+  econstructor.
+  intros n Hn.
+  enough (∑ m, exists x, e m = Some (n,x)) as (m & Hx). {
+    destruct (e m) as [(n', x) | ] eqn:E.
+    * exists x. eapply (He (_, _)). destruct Hx as (? & [= -> ->]). eauto.
+    * exfalso. destruct Hx. congruence.
+  }
+  eapply mu_nat_dep.
+  - intros m. destruct (e m) as [[] | ].
+    + destruct (PeanoNat.Nat.eq_dec n n0). subst. eauto.
+      right. intros (? & [= -> ->]). congruence.
+    + right. clear. firstorder congruence.
+  - destruct Hn as (x & [m H] % (He (_ , _ ))). eauto.
+Qed.
+
 (** *** Enumerable types  *)
 
 Lemma enumerator_enumeratorᵗ X f :
@@ -360,8 +381,36 @@ Proof.
   intros [d Hd] [e He].
   pose proof (enumerator_retraction _ _ _ Hd He) as (I & H).
   now exists I, e.
-Qed.  
+Qed.
 
+Definition retraction_tight {X} {Y} (I : X -> Y) R := forall x : X, R (I x) = Some x /\ forall y, R y = Some x -> I x = y.
+
+From Undecidability Require Import Dec.
+
+Lemma retraction_to_tight {X} {Y} (I : X -> Y) R (HY : eq_dec Y) :
+  retraction' I R ->
+  exists R',
+  retraction_tight I R'.
+Proof.
+  exists (fun y => if R y is Some x then if Dec (y = I x) then Some x else None else None).
+  intros x. rewrite H.  destruct Dec; try congruence. split.
+  - reflexivity.
+  - intros y. destruct (R y). destruct Dec.
+    all: now intros [= ->].
+Qed.
+
+Lemma datatype_retract X :
+  discrete X /\ enumerableᵗ X <-> exists I R, @retraction_tight X nat I R.
+Proof.
+  split.
+  intros [Hd He].
+  - edestruct enumerable_discrete_datatype as (I & R & H); eauto.
+    exists I. eapply retraction_to_tight in H as [R' H]; eauto.
+  - intros (I & R & H).
+    split.
+    + eapply datatype_discrete; firstorder.
+    + eapply datatype_enumerable; firstorder.
+Qed.
 
 (** Type classes *)
 

@@ -560,10 +560,10 @@ Proof.
   - tauto.
 Qed
 .
-Definition MP_semidecidable_ex_enumerable := forall X (p : X -> Prop), enumerable p -> ~~ (exists x, p x) -> exists x, p x.
+Definition MP_enumerable_ex := forall X (p : X -> Prop), enumerable p -> ~~ (exists x, p x) -> exists x, p x.
 
-Lemma MP_bla :
-  MP_semidecidable_ex -> MP_semidecidable_ex_enumerable.
+Lemma MP_semi_decidable_enumerable :
+  MP_semidecidable_ex -> MP_enumerable_ex.
 Proof.
   intros mp X p [f Hf]. red in Hf.
   setoid_rewrite Hf. intros H.
@@ -574,8 +574,8 @@ Proof.
   - destruct (f n) eqn:E; try congruence. now exists x, n.
 Qed.
 
-Lemma MP_blub :
-  MP_semidecidable_ex_enumerable -> MP_semidecidable_ex.
+Lemma MP_enumerable_semi_decidable :
+  MP_enumerable_ex -> MP_semidecidable_ex.
 Proof.
   intros mp p Hp.
   eapply mp. eapply semi_decidable_enumerable; eauto.

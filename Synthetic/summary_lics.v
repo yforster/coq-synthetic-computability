@@ -19,6 +19,20 @@ Proof.
     + eapply g'_f'.
 Qed.
 
+Corollary Computational_Cantor_Bernstein :
+  forall X : Set, discrete X -> enumerableᵗ X ->
+  forall Y : Set, discrete Y -> enumerableᵗ Y ->
+  forall f : X -> Y, (forall x1 x2, f x1 = f x2 -> x1 = x2) ->
+  forall g : Y -> X, (forall y1 y2, g y1 = g y2 -> y1 = y2) ->
+  exists (f' : X -> Y) (g' : Y -> X), forall x y, f' (g' y) = y /\ g' (f' x) = x.
+Proof.
+  intros X HX1 HX2 Y HY1 HY2 f Hf g Hg.
+  destruct (@Myhill_Isomorphism_Theorem X HX1 HX2 Y HY1 HY2 (fun _ => True) (fun _ => True)) as (f' & g' & Hf' & Hg' & H).
+  - exists f. firstorder.
+  - exists g. firstorder.
+  - exists f', g'. eapply H.
+Qed.
+
 Theorem Posts_problem_many_one :
   exists p : nat -> Prop, simple p /\ enumerable p /\ ~ decidable p /\ ~ uncurry W ⪯ₘ p.
 Proof.

@@ -136,22 +136,6 @@ Tactic Notation "intros" "⟨" ident(n) "," ident(m) "⟩" :=
   let E := fresh "E" in
   intros nm; destruct (unembed nm) as [n m] eqn:E.
 
-Definition retraction_tight {X} {Y} (I : X -> Y) R := forall x : X, R (I x) = Some x /\ forall y, R y = Some x -> I x = y.
-
-From Undecidability Require Import Dec.
-
-Lemma retraction_to_tight {X} {Y} (I : X -> Y) R (HY : eq_dec Y) :
-  retraction' I R ->
-  exists R',
-  retraction_tight I R'.
-Proof.
-  exists (fun y => if R y is Some x then if Dec (y = I x) then Some x else None else None).
-  intros x. rewrite H.  destruct Dec; try congruence. split.
-  - reflexivity.
-  - intros y. destruct (R y). destruct Dec.
-    all: now intros [= ->].
-Qed.
-
 Lemma EAS_datatype_direct X (p : X -> nat -> Prop) (x0 : X) :
   datatype X ->
   enumerable (uncurry p) ->
