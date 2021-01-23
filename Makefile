@@ -2,7 +2,7 @@ all: Makefile.coq
 	export TIMED
 	@+$(MAKE) -f Makefile.coq all
 
-html: Makefile.coq
+html: all Makefile.coq
 	@+$(MAKE) -f Makefile.coq html
 	mv html/*.html website
 	rm -rf html
