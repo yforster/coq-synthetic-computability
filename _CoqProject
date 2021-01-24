@@ -3,17 +3,6 @@
 -arg -w -arg -notation-overridden
 COQDOCFLAGS = "--charset utf-8 -s --with-header ./website/resources/header.html --with-footer ./website/resources/footer.html --index indexpage"
 
-Shared/Libs/PSL/Tactics/AutoIndTac.v
-Shared/Libs/PSL/Tactics/Tactics.v
-Shared/Libs/PSL/Prelim.v
-Shared/Libs/PSL/EqDec.v
-Shared/Libs/PSL/Lists/BaseLists.v
-Shared/Libs/PSL/Lists/Filter.v
-Shared/Libs/PSL/Lists/Removal.v
-Shared/Libs/PSL/Lists/Cardinality.v
-Shared/Libs/PSL/Lists/Dupfree.v
-Shared/Libs/PSL/Lists/Power.v
-
 Shared/Dec.v
 Shared/ListAutomation.v
 Shared/FilterFacts.v
