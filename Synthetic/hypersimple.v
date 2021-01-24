@@ -56,47 +56,80 @@ Proof.
   - eauto.
 Qed.
 
-From Undecidability.Shared.Libs.PSL Require Import Power EqDec.
+Fixpoint powerlist {X} (l : list X) :=
+  match l with
+  | [] => [ [] ]
+  | x :: l => powerlist l ++ map (cons x) (powerlist l)
+  end.
 
-Definition gen (n : nat) : list (list nat) := power (seq 0 (S n)).
-
-Lemma dupfree_Nodup {X} (A : list X) :
-  Dupfree.dupfree A <-> NoDup A.
-Proof.
-  induction A;split;intros H;inv H;repeat econstructor;tauto.
-Qed.
-
-Lemma dupfree_rep {X : eqType} (A : list X) U : Dupfree.dupfree U -> Dupfree.dupfree (rep A U).
-Proof.
-  induction 1.
-  - cbn. econstructor.
-  - cbn. destruct Dec; cbn.
-    + econstructor. intros ? % in_filter_iff. 1:firstorder.
-      exact IHdupfree.
-    + exact IHdupfree.
-Qed.
-
-Lemma gen_spec' n l : NoDup l -> list_max l <= n -> exists l', NoDup l' /\ (forall z, In z l <-> In z l') /\ In l' (gen n).
-Proof.
-  intros H1 % dupfree_Nodup H2.
-  exists (@rep (EqDec.EqType nat) l (seq 0 (S n))). split; [ | split].
-  - eapply dupfree_Nodup, dupfree_rep, dupfree_Nodup, seq_NoDup.
-  - intros z. rewrite rep_equi. reflexivity. intros x Hx.
-    eapply list_max_le, Forall_forall in H2. eapply in_seq. 2:eauto. cbn. lia.
-  - eapply (@rep_power (EqDec.EqType nat)).
-Qed.
-
-Lemma power_length {X : eqType} (l : list X) : length (power l) = 2 ^ (length l).
+Lemma powerlist_length {X} (l : list X) : length (powerlist l) = 2^(length l).
 Proof.
   induction l; cbn.
   - reflexivity.
-  - rewrite app_length, map_length, <- IHl. lia.
+  - rewrite app_length, map_length, IHl. lia.
+Qed.
+
+Lemma powerlist_incl {X} (l : list X) l' :
+  In l' (powerlist l) -> forall x, In x l' -> In x l.
+Proof.
+  induction l in l' |- *; cbn.
+  - intros [<- | []] ? []. 
+  - rewrite in_app_iff, in_map_iff.
+    intros [ ? | (? & <- & ?)]; eauto.
+    intros ? [<- | ]; eauto.
+Qed.
+
+Lemma powerlist_NoDup {X} (l : list X) l' :
+  NoDup l -> In l' (powerlist l) -> NoDup l'.
+Proof.
+  induction 1 in l' |- * ; cbn.
+  - intros [ <- | []]. econstructor.
+  - rewrite in_app_iff, in_map_iff.
+    intros [ ? | (? & <- & ?)]; eauto.
+    econstructor. 2: eauto.
+    intros ?. eapply powerlist_incl in H2; eauto.
+Qed.
+
+Lemma powerlist_filter {X} (l : list X) l' l'' :
+  IsFilter (fun x => In x l') l l'' -> 
+  In l'' (powerlist l).
+Proof.
+  induction 1; cbn.
+  - firstorder.
+  - rewrite in_app_iff, in_map_iff. eauto.
+  - rewrite in_app_iff, in_map_iff. eauto.
+Qed.
+     
+Lemma powerlist_in (l : list nat) l' :
+  (forall x, In x l' -> In x l) -> exists l'', In l'' (powerlist l) /\ (forall x, In x l' <-> In x l'').
+Proof.
+  intros H.
+  destruct (IsFilter_ex l (fun x => In x l')) as [l'' H'].
+  - intros n. decide (In n l'); firstorder.
+  - exists l''. split. eapply powerlist_filter; eauto.
+    eapply IsFilter_spec in H' as (_ & _ & H').
+    setoid_rewrite H'. firstorder.
+Qed.
+
+Definition gen (n : nat) : list (list nat) := powerlist (seq 0 (S n)).
+
+Lemma gen_spec' n l : NoDup l -> list_max l <= n -> exists l', NoDup l' /\ (forall z, In z l <-> In z l') /\ In l' (gen n).
+Proof.
+  intros H1 H2.
+  destruct (powerlist_in (seq 0 (S n)) l) as (l' & H3 & H4).
+  - intros x Hx. eapply in_seq. split. lia. cbn.
+    eapply list_max_le in H2. eapply Forall_forall in H2.
+    2: eauto. lia.
+  - exists l'. repeat eapply conj.
+    + eapply powerlist_NoDup. 2: eauto. eapply seq_NoDup.
+    + eapply H4.
+    + eapply H3.
 Qed.
 
 Lemma gen_length n : length (gen n) = 2 ^ (S n).
 Proof.
   unfold gen.
-  now rewrite power_length, seq_length.
+  now rewrite powerlist_length, seq_length.
 Qed.
 
 Definition star_of p n := (fun z => (~~ p z /\ z <= n) \/ z > n).
