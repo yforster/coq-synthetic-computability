@@ -104,6 +104,20 @@ Qed.
 Definition generative {X} (p : X -> Prop) :=
   forall l : list X, exists x, p x /\ ~ In x l.
 
+Lemma generative_inhabited {X} (p: X -> Prop):
+  generative p -> exists x, p x.
+Proof.
+  intros H1. specialize (H1 []) as [x [H _]].
+  eauto.
+Qed.
+
+Lemma nonfinite_inhabited {X} (p: X -> Prop):
+  (~ exhaustible p) -> ~~ exists x, p x.
+Proof.
+  intros H1 H2.
+  apply H1. exists nil. intros x px. apply H2. exists x. exact px.
+Qed.
+
 Lemma generative_non_exhaustible {X} (p : X -> Prop) :
   generative p -> ~ exhaustible p.
 Proof.
