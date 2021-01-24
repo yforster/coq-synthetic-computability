@@ -64,7 +64,7 @@ Proof.
   - eapply enumerable_red. eapply W_uncurry_red. eauto. eauto.
     eapply enumerable_W.
   - eapply generative_W.
-  - unshelve epose proof (HS_hypersimple (I := (fun! ⟨n,m⟩ => W n m)) (E_I := f) _ _ _).
+  - unshelve epose proof (HS_hypersimple (fun! ⟨n,m⟩ => W n m) f _ _ _).
     + firstorder.
     + firstorder.
     + intros ? % decidable_complement % decidable_enumerable.
@@ -72,7 +72,7 @@ Proof.
       eapply W_not_enumerable.
     + eexists. split. eapply H. repeat eapply conj.
       * eapply H.
-      * eapply (HS_undec (I := (fun! ⟨n,m⟩ => W n m)) (E_I := f)). firstorder. firstorder.
+      * eapply (HS_undec (fun! ⟨n,m⟩ => W n m) f). firstorder. firstorder.
         intros ? % decidable_complement % decidable_enumerable.
         eapply not_coenumerable. 5: eapply H1. eapply W_uncurry_red'. all: eauto.
         eapply W_not_enumerable.

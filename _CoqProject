@@ -27,8 +27,6 @@ Synthetic/myhill.v
 Axioms/principles.v
 Axioms/halting.v
 Axioms/axioms.v
-Axioms/kleenetree.v
-Axioms/baire_cantor.v
 Axioms/EA.v
 
 Synthetic/simple.v

@@ -236,7 +236,7 @@ Qed.
 
 Lemma generative_W :   generative (fun! ⟨ n, m ⟩ => W n m).
 Proof.
-  eapply unbounded_generative. intros x y; decide (x = y); eauto.
+  eapply unbounded_generative. intros x y; destruct (PeanoNat.Nat.eq_dec x y); eauto.
   destruct (do_EA (fun _ => True)) as [c_top H_top]. {
     eapply decidable_enumerable. 2:eauto. exists (fun _ => true). firstorder.
   }
