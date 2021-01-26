@@ -15,5 +15,5 @@ The easiest way to install Coq and required libraries is via `opam` (version `2`
 opam switch create coq-reducibility 4.07.1+flambda
 eval $(opam env)
 opam repo add coq-released https://coq.inria.fr/opam/released
-opam install coq-8.12.1 coq-equations-1.2.3+8.12 coq-stdpp.1.4.0
+opam install coq-8.12.1 coq-equations.1.2.3+8.12 coq-stdpp.1.4.0
 ```
