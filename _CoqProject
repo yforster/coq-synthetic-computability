@@ -12,6 +12,23 @@ Shared/equiv_on.v
 Shared/partial.v
 Shared/Pigeonhole.v
 
+Shared/Libs/PSL/Base.v
+Shared/Libs/PSL/Bijection.v
+Shared/Libs/PSL/EqDec.v
+Shared/Libs/PSL/FiniteTypes/BasicDefinitions.v
+Shared/Libs/PSL/FiniteTypes/FinTypes.v
+Shared/Libs/PSL/Lists/BaseLists.v
+Shared/Libs/PSL/Lists/Cardinality.v
+Shared/Libs/PSL/Lists/Dupfree.v
+Shared/Libs/PSL/Lists/Filter.v
+Shared/Libs/PSL/Lists/Position.v
+Shared/Libs/PSL/Lists/Power.v
+Shared/Libs/PSL/Lists/Removal.v
+Shared/Libs/PSL/Numbers.v
+Shared/Libs/PSL/Prelim.v
+Shared/Libs/PSL/Tactics/AutoIndTac.v
+Shared/Libs/PSL/Tactics/Tactics.v
+
 Synthetic/Definitions.v
 Synthetic/DecidabilityFacts.v
 Synthetic/SemiDecidabilityFacts.v
