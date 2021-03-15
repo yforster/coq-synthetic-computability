@@ -32,6 +32,6 @@ jobs:
           fetch-depth: 1
 
       - run: opam repo add coq-released https://coq.inria.fr/opam/released
-      - run: opam install coq-8.12.1 coq-equations.1.2.3+8.12 coq-stdpp.1.4.0 coq-metacoq-checker.1.0~beta1+8.12
+      - run: opam install coq.8.12.1 coq-equations.1.2.3+8.12 coq-stdpp.1.4.0 coq-metacoq-checker.1.0~beta1+8.12
 
       - run: opam exec -- make -j 2 
