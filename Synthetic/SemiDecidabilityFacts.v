@@ -1,8 +1,37 @@
+Require Import List Morphisms Lia.
 Require Import Undecidability.Synthetic.DecidabilityFacts Undecidability.Synthetic.EnumerabilityFacts Undecidability.Shared.partial Undecidability.Shared.embed_nat Undecidability.Synthetic.FinitenessFacts.
-Require Import List Lia.
 Export EmbedNatNotations.
 
 (** ** Semi-decidability  *)
+
+Definition equiv_sdec {X} := fun (f g : X -> nat -> bool) => forall x, (exists n, f x n = true) <-> exists n, g x n = true.
+
+Instance Proper_semi_decider {X} :
+  Proper (@equiv_sdec X ==> pointwise_relation X iff ==> iff ) (@semi_decider X).
+Proof.
+  intros f g H1 p q H2. red in H1, H2.
+  unfold semi_decider. 
+  split; intros H x; cbn in H1.
+  - now rewrite <- H2, H, H1.
+  - now rewrite H2, H, H1.
+Qed.
+
+Instance Proper_semi_decidable {X} :
+  Proper (pointwise_relation X iff ==> iff) (@semi_decidable X).
+Proof.
+  intros p q H2.
+  split; intros [f H]; exists f; red.
+  - intros x. now rewrite <- (H2 x).
+  - intros x. now rewrite H2.
+Qed.
+
+Lemma semi_decider_ext {X} {p q : X -> Prop} {f g} :
+  semi_decider f p -> semi_decider g q -> equiv_sdec f g -> p ≡{_} q.
+Proof.
+  unfold semi_decider. cbn.
+  intros Hp Hq E x. red in E.
+  now rewrite Hp, E, Hq.
+Qed. 
 
 Lemma semi_decidable_part_iff {X} {p : X -> Prop} {Part : partiality}:
   semi_decidable p <-> exists Y (f : X -> part Y), forall x, p x <-> exists y, f x =! y.
@@ -290,6 +319,38 @@ Proof.
     destruct (f n); inversion Hn.
     eapply Hd in Hn. now subst.
 Qed.
+
+Section Cantor.
+
+  Variable A : Type.
+  Variable g : A -> option (A -> bool).
+
+  Lemma Cantor : (forall f : A -> bool, exists a f', g a = Some f' /\ forall x, f x = f' x) -> False.
+  Proof.
+    intros g_surj.
+    pose (h x1 := if g x1 is Some f then negb (f x1) else false).
+    destruct (g_surj h) as (a & f & H1 & H2).
+    specialize (H2 a). cbv in H2.
+    rewrite H1 in H2.
+    destruct (f a); congruence.
+  Qed.
+
+End Cantor.
+
+Lemma neg_enumerable_K :
+  (forall f, (exists n : nat, f n = true) \/ ~ (exists n : nat, f n = true)) ->
+  ~ enumerable (fun f => exists n : nat, f n = true).
+Proof.
+  intros LPO [e He].
+  eapply Cantor with (g := fun n => if n is S n then e n else Some (fun _ => false)).
+  intros f.
+  destruct (LPO f).
+  - eapply He in H as [m Hm]. exists (S m). eauto.
+  - exists 0, (fun _ => false). split. reflexivity.
+    intros. destruct (f x) eqn:E; firstorder congruence. 
+Qed.
+
+
 
 Lemma semi_decider_enumerator {X} {p : X -> Prop} e f : 
   enumeratorᵗ e X -> semi_decider f p -> 

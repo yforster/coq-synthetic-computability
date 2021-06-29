@@ -23,9 +23,16 @@ Lemma DN (P : Prop) : P -> ~~ P. Proof. tauto. Qed.
 Lemma DN_impl (P Q : Prop) : (P -> ~~Q) -> ~~ P -> ~~ Q. Proof. tauto. Qed.
 Lemma neg_impl (P Q : Prop) : (P -> ~Q) -> ~~ P -> ~ Q. Proof. tauto. Qed.
 
+Lemma negative_dn (P Q : Prop) :
+  (~~Q -> Q) -> (P -> Q) -> ~~ P -> Q.
+Proof.
+  tauto.
+Qed.
+
 Lemma negative_ca P Q :
   (~~Q -> Q) -> (P \/ ~ P -> Q) -> Q.
 Proof.
+  intros H1 H2. eapply (negative_dn (P \/ ~P) Q H1 H2). 
   tauto.
 Qed.
 
