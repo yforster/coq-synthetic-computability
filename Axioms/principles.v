@@ -236,6 +236,30 @@ Proof.
     exists f. intros x'. reflexivity.
 Qed.
 
+Definition CODING :=
+  exists F : (nat -> bool) -> nat, forall f, F f = F (fun _ => false) <-> forall n, f n = false.
+
+Lemma no_CODING :
+  CODING -> decidable (compl K).
+Proof.
+  intros [F HF].
+  exists (fun f => Nat.eqb (F f) (F (fun _ => false))).
+  intros f. unfold compl, K. red. rewrite <- forall_neg_exists_iff.
+  destruct (Nat.eqb_spec (F f) (F (fun _ => false))); rewrite <- HF.
+  all: firstorder.
+Qed.
+
+Goal forall p : nat -> Prop, K ⪯ₘ p -> (forall f g : nat -> bool, (forall x, f x = g x) -> f = g) ->
+                  decidable (compl K).
+Proof.
+  intros p [F HF] FunExt.
+  eapply no_CODING.
+  exists F. intros f. 
+  split.
+  - intros H. rewrite forall_neg_exists_iff, (HF f), H, <- (HF (fun _ => false)). firstorder.
+  - intros H. f_equal. now eapply FunExt. 
+Qed.
+
 Definition LLPO := forall f g : nat -> bool, ((exists n, f n = true) -> (exists n, g n = true)) \/ ((exists n, g n = true) -> (exists n, f n = true)).
 Definition DM_Sigma_0_1 := forall f g : nat -> bool, ~ ((exists n, f n = true) /\ (exists n, g n = true)) -> ~ (exists n, f n = true) \/ ~ (exists n, g n = true).
 Definition DGP_sdec := forall X (p : X -> Prop), semi_decidable p -> forall x y, (p x -> p y) \/ (p y -> p x).
@@ -560,10 +584,10 @@ Proof.
   - tauto.
 Qed
 .
-Definition MP_enumerable_ex := forall X (p : X -> Prop), enumerable p -> ~~ (exists x, p x) -> exists x, p x.
+Definition MP_semidecidable_ex_enumerable := forall X (p : X -> Prop), enumerable p -> ~~ (exists x, p x) -> exists x, p x.
 
-Lemma MP_semi_decidable_enumerable :
-  MP_semidecidable_ex -> MP_enumerable_ex.
+Lemma MP_bla :
+  MP_semidecidable_ex -> MP_semidecidable_ex_enumerable.
 Proof.
   intros mp X p [f Hf]. red in Hf.
   setoid_rewrite Hf. intros H.
@@ -574,8 +598,8 @@ Proof.
   - destruct (f n) eqn:E; try congruence. now exists x, n.
 Qed.
 
-Lemma MP_enumerable_semi_decidable :
-  MP_enumerable_ex -> MP_semidecidable_ex.
+Lemma MP_blub :
+  MP_semidecidable_ex_enumerable -> MP_semidecidable_ex.
 Proof.
   intros mp p Hp.
   eapply mp. eapply semi_decidable_enumerable; eauto.
@@ -590,14 +614,20 @@ Proof.
   - exists f. intros x. red. specialize (Hf x). destruct (f x); firstorder congruence.
 Qed.
 
+Lemma Post_nempty_to_MP {X} (x0 : X) :
+  (forall (p : X -> Prop), semi_decidable p -> semi_decidable (compl p) -> decidable p) -> MP.
+Proof.
+  intros H f Hf.
+  destruct (H (fun _ => exists n, f n = true)) as [d Hd].
+  - exists (fun _ => f). now intros x.
+  - exists (fun _ _ => false). firstorder.
+  - destruct (decider_decide Hd x0); tauto.
+Qed.
+
 Lemma Post_to_MP :
   Post -> MP.
 Proof.
-  intros H f Hf.
-  destruct (H unit (fun _ => exists n, f n = true)) as [d Hd].
-  - exists (fun _ => f). now intros x.
-  - exists (fun _ _ => false). firstorder.
-  - destruct (decider_decide Hd tt); tauto.
+  intros H. apply (Post_nempty_to_MP tt). apply H.
 Qed.
 
 Lemma semi_decidable_ext {X} (p q : X -> Prop) :
@@ -636,6 +666,33 @@ Proof.
   intros x. red in Hf. rewrite Hf. rewrite forall_neg_exists_iff.
   split; eauto.
 Qed.
+
+Lemma MP_partial_to_MP {Part : partiality} X (x0 : X) :
+  (forall x : part X, ~~ ter x -> ter x) -> MP.
+Proof.
+  intros mp f Hf.
+  destruct (mp (bind (mu_tot f) (fun _ => ret x0))) as [? H].
+  intros H. apply Hf. intros [n [m Hm] % mu_tot_ter].
+  apply H. exists x0.
+  eapply bind_hasvalue.
+  exists m. split; eauto. eapply ret_hasvalue.
+  eapply bind_hasvalue in H as (? & [] % mu_tot_hasvalue & ?).
+  eauto.
+Qed.
+
+Lemma MP_to_MP_partial {Part : partiality} :
+  MP -> (forall X, forall x : part X, ~~ ter x -> ter x).
+Proof.
+  intros MP X x.
+  assert (ter x <-> exists n, (if seval x n is Some x then true else false) = true). {
+    split.
+    - intros [a [n H] % seval_hasvalue]. exists n. now rewrite H.
+    - intros [n H]. destruct seval as [ a | ] eqn:E; try congruence.
+      exists a. eapply seval_hasvalue. eauto.
+  }
+  rewrite H.
+  eapply MP.
+Qed.  
 
 Lemma DNE_sdec_to_cosdec :
   DNE ->
@@ -712,6 +769,11 @@ Proof.
   split. reflexivity. intros n. eapply H.
 Qed.
 
+Lemma AC_on_to_AUC_on : forall X Y, AC_on X Y -> AUC_on X Y.
+Proof.
+  intros X Y C R H. eapply C. firstorder.
+Qed.
+
 Goal AC -> ADC.
 Proof.
   intros ? X Inh.
@@ -762,13 +824,23 @@ Proof.
   intros H. eapply H. 
 Qed.
 
-Goal AC_1_0 -> AC_0_0.
+Lemma AC_1_0_to_AC_0_0 : AC_1_0 -> AC_0_0.
 Proof.
   intros C R Htot.
   destruct (C (fun g x => R (g 0) x)) as [f].
   - intros g. eapply Htot.
   - exists (fun x => f (fun _ => x)).
     intros x. eapply (H (fun _ => x)).
+Qed.
+
+Lemma AC_0_0_to_AC_nat_bool : AC_0_0 -> AC_on nat bool.
+Proof.
+  intros C R Htot.
+  destruct (C (fun n m => R n (Nat.eqb m 0))) as [f].
+  - intros x. destruct (Htot x) as [ [] ].
+    + exists 0. firstorder.
+    + exists 1. firstorder.
+  - eexists. eapply H.
 Qed.
 
 Lemma Diaconescu :
@@ -828,15 +900,6 @@ Proof.
     rewrite !embedP in E. now inv E.
 Qed.
 
-Lemma AC_1_0_Fext_incompat :
-  AC_1_0 -> Fext -> EA -> False.
-Proof.
-  intros C Fext EA.
-  eapply (K_compl_undec EA).
-  eapply red_m_transports. 2:now eapply AC_1_0_Fext.
-  eapply red_m_complement. eapply K_nat_equiv.
-Qed.
-
 Lemma AUC_to_dec (p : nat -> Prop) :
   AUC_on nat bool -> (forall n, p n \/ ~ p n) -> decidable p.
 Proof.
@@ -861,6 +924,29 @@ Lemma AC_0_0_LPO_incompat :
 Proof.
   intros C LPO EA.
   now eapply (K0_compl_undec EA), AC_0_0_LPO_incompat'.
+Qed.
+
+Lemma AC_1_0_Fext_CODING {Mod : model_of_computation} :
+  AC_1_0 -> Fext -> CT -> CODING.
+Proof.
+  intros C Fext [F HF] % C. 
+  exists (fun (f : nat -> bool) => F (fun x : nat => if f x then 0 else 1)).
+  intros f. split.
+  + intros H x.
+    pose proof (HF (λ _ : nat, 1) x) as [n1 Hn1]. rewrite <- H in Hn1.
+    pose proof (HF (λ x : nat, if f x then 0 else 1) x) as [n2 Hn2].
+    eapply monotonic_agnostic in Hn1. 2: eapply Mod.
+    eapply Hn1 in Hn2. destruct (f x); congruence.
+  + intros H2. f_equal. eapply Fext. intros x. rewrite H2. reflexivity.
+Qed.
+
+Lemma AC_1_0_Fext_incompat {Mod : model_of_computation} :
+  AC_1_0 -> Fext -> CT -> False.
+Proof.
+  intros C funext ct.
+  eapply K_compl_undec.
+  - eapply CT_to_EA, ct.
+  - now eapply no_CODING, AC_1_0_Fext_CODING.
 Qed.
 
 (** ** Brouwer's intuitionism *)

@@ -98,6 +98,18 @@ Proof.
   eapply K0_enum.
 Qed.
 
+Definition K (f : nat -> bool) := exists n, f n = true.
+
+Goal forall p : nat -> Prop, K ⪯ₘ p -> (forall f g : nat -> bool, (forall x, f x = g x) -> f = g) ->
+                  forall f : nat -> bool, ~~ (exists n, f n = true) \/ ~ (exists n, f n = true).
+Proof.
+  intros p [F HF] FunExt f.
+  destruct (PeanoNat.Nat.eq_dec (F f) (F (fun _ => false))) as [E | E].
+  - right. intros H % HF. rewrite E in H. eapply HF in H as [n [=]].
+  - left. intros H. eapply E. f_equal. eapply FunExt.
+    intros n. destruct (f n) eqn:E'; firstorder congruence.
+Qed.
+
 Lemma K_compl_undec : ~ decidable (compl K).
 Proof.
   intros H.

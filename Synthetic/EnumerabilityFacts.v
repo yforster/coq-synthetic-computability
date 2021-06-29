@@ -157,6 +157,48 @@ Proof.
     + exists (f 0). eapply Hf. eauto.
 Qed.
 
+Definition parametric_enumerator {X Y} (f : X -> nat -> option Y) (p : X -> Y -> Prop) :=
+  forall x y, p x y <-> exists n, f x n = Some y.
+
+Definition penumerable {X Y} (p : X -> Y -> Prop) :=
+  exists f, parametric_enumerator f p.
+
+Lemma penumerator_enumerator {X Y} f g (p : X -> Y -> Prop) :
+  parametric_enumerator f p -> enumeratorᵗ g X ->
+  enumerator (fun! ⟨n,m⟩ => if g n is Some x then if f x m is Some y then Some (x,y) else None else None) (uncurry p).
+Proof.
+  intros Hf Hg. intros (x,y). cbn.
+  rewrite (Hf x y). split.
+  - intros [m Hm]. destruct (Hg x) as [n Hn].
+    exists ⟨n,m⟩. now rewrite embedP, Hn, Hm.
+  - intros [nm H]. destruct (unembed nm) as [n m].
+    destruct (g n) as [x' | ]; try congruence.
+    destruct f as [y' | ] eqn:E; inversion H; subst.
+    eauto.
+Qed.
+
+Lemma enumerator_penumerator {X Y} f g (p : X -> Y -> Prop) :
+  enumerator f (uncurry p) -> decider g (eq_on X) ->
+  parametric_enumerator (fun x n => if f n is Some (x', y) then if g (x, x') then Some y else None else None) p.
+Proof.
+  intros Hf Hg. intros x y.
+  rewrite (Hf (x,y)). split.
+  - intros [n Hn]. exists n. rewrite Hn.
+    now specialize (Hg (x,x)) as [-> _].
+  - intros [n H]. destruct (f n) as [(x',y') | ] eqn:E; try congruence.
+    specialize (Hg (x,x')). destruct g; inversion H; subst.
+    destruct Hg. rewrite H1 in *; eauto.
+Qed.
+
+Lemma penumerable_iff {X Y} (p : X -> Y -> Prop) :
+  enumerableᵗ X -> discrete X ->
+  penumerable p <-> enumerable (uncurry p).
+Proof.
+  intros [g1 Hg1] [g2 Hg2]. split.
+  - intros [f Hf]. eexists. eapply penumerator_enumerator; eauto.
+  - intros [f Hf]. eexists. eapply enumerator_penumerator; eauto.
+Qed.
+
 Lemma inspect_opt {X} (o : option X) :
   {x | o = Some x} + {o = None}.
 Proof.
@@ -182,17 +224,22 @@ Proof.
       eexists. eapply seval_hasvalue. eauto.
 Qed.
 
-Lemma enumerable_graph {X} {Y} (f : X -> Y) :
-  enumerableᵗ X ->
-  enumerable (fun p => exists x, p = ( x, f x )).
+Lemma enumerator_graph {X} {Y} e :
+  enumeratorᵗ e X ->
+  forall f : X -> Y, enumerator (fun n => if e n is Some x then Some (x, f x) else None) (fun p => exists x, p = ( x, f x )).
 Proof.
-  intros [e He].
-  exists (fun n => if e n is Some x then Some (x, f x) else None).
-  intros y. split.
+  intros He f y. split.
   - intros [x ->]. specialize (He x) as [n Hn]. exists n.
     now rewrite Hn.
   - intros [n Hn].
     destruct (e n); inversion Hn. eauto.
+Qed.
+
+Lemma enumerable_graph {X} {Y} (f : X -> Y) :
+  enumerableᵗ X ->
+  enumerable (fun p => exists x, p = ( x, f x )).
+Proof.
+  intros [e He]. eexists. eapply enumerator_graph; eauto.
 Qed.
 
 Lemma enumerator_AC X Y e d (R : X -> Y -> Prop) :
@@ -220,27 +267,6 @@ Proof.
   - cbn. intros x. pose proof (Hg x) as H. cbn in H. eapply (He (_, _)). exists (g x).
     destruct (inspect_opt (e (g x))) as [[(x',y) E']| E'];
     rewrite? E' in *. destruct H as [? [= <- <-]]. congruence. destruct H as [? [=]].
-Qed.
-
-Lemma mu_enumerable {X} {p : nat -> X -> Prop} :
-  discrete X ->
-  enumerable (uncurry p) ->
-  inhabited (forall n, (exists x, p n x) -> ∑ x, p n x).
-Proof.
-  intros [D] % discrete_iff [e He].
-  econstructor.
-  intros n Hn.
-  enough (∑ m, exists x, e m = Some (n,x)) as (m & Hx). {
-    destruct (e m) as [(n', x) | ] eqn:E.
-    * exists x. eapply (He (_, _)). destruct Hx as (? & [= -> ->]). eauto.
-    * exfalso. destruct Hx. congruence.
-  }
-  eapply mu_nat_dep.
-  - intros m. destruct (e m) as [[] | ].
-    + destruct (PeanoNat.Nat.eq_dec n n0). subst. eauto.
-      right. intros (? & [= -> ->]). congruence.
-    + right. clear. firstorder congruence.
-  - destruct Hn as (x & [m H] % (He (_ , _ ))). eauto.
 Qed.
 
 (** *** Enumerable types  *)
@@ -381,36 +407,8 @@ Proof.
   intros [d Hd] [e He].
   pose proof (enumerator_retraction _ _ _ Hd He) as (I & H).
   now exists I, e.
-Qed.
+Qed.  
 
-Definition retraction_tight {X} {Y} (I : X -> Y) R := forall x : X, R (I x) = Some x /\ forall y, R y = Some x -> I x = y.
-
-From Undecidability Require Import Dec.
-
-Lemma retraction_to_tight {X} {Y} (I : X -> Y) R (HY : eq_dec Y) :
-  retraction' I R ->
-  exists R',
-  retraction_tight I R'.
-Proof.
-  exists (fun y => if R y is Some x then if Dec (y = I x) then Some x else None else None).
-  intros x. rewrite H.  destruct Dec; try congruence. split.
-  - reflexivity.
-  - intros y. destruct (R y). destruct Dec.
-    all: now intros [= ->].
-Qed.
-
-Lemma datatype_retract X :
-  discrete X /\ enumerableᵗ X <-> exists I R, @retraction_tight X nat I R.
-Proof.
-  split.
-  intros [Hd He].
-  - edestruct enumerable_discrete_datatype as (I & R & H); eauto.
-    exists I. eapply retraction_to_tight in H as [R' H]; eauto.
-  - intros (I & R & H).
-    split.
-    + eapply datatype_discrete; firstorder.
-    + eapply datatype_enumerable; firstorder.
-Qed.
 
 (** Type classes *)
 

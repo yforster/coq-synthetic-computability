@@ -27,15 +27,10 @@ Notation "p ≡₁ q" := (p ⪯₁ q /\ q ⪯₁ p) (at level 50).
 Definition reduces_tt {X} {Y} (f : X -> {qs : list Y & truthtable}) (P : X -> Prop) (Q : Y -> Prop) := 
   forall x, forall L, Forall2 reflects L (map Q (projT1 (f x))) -> reflects (eval_tt (projT2 (f x)) L) (P x).
 
-Notation "p ⊨ QT" := (forall L, Forall2 reflects L (map p (projT1 QT)) -> eval_tt (projT2 QT) L = true) (at level 50).
-
 Definition red_tt {X} {Y} (P : X -> Prop) (Q : Y -> Prop) :=
   exists f, 
     reduces_tt f P Q.
 Notation "P ⪯ₜₜ Q" := (red_tt P Q) (at level 50).
-
-Definition red_tt' {X} {Y} (P : X -> Prop) (Q : Y -> Prop) :=
-  red_m P (fun x : {qs : list Y & truthtable} => Q ⊨ x).
 
 Definition reduces_tTuring {X} {Y} (f : (Y -> bool) -> (X -> bool)) (P : X -> Prop) (Q : Y -> Prop) :=
   forall d, decider d Q -> decider (f d) P.
@@ -295,6 +290,12 @@ Local Notation "( a ,, b )" := (existT a b).
 Local Notation "( a ).1" := (projT1 a).
 Local Notation "( a ).2" := (projT2 a).
 
+Axiom PropExt : forall P1 P2 : Prop, P1 <-> P2 -> P1 = P2.
+Fact PropExt' : forall P1 P2 : Prop, P1 <-> P2 <-> P1 = P2.
+Proof.
+  split. eapply PropExt. now intros ->.
+Qed.
+
 Instance red_tt_reflexive {X} : Reflexive (@red_tt X X).
 Proof.
   move => p.
@@ -525,7 +526,7 @@ Proof.
   apply Hf, Hq. firstorder.
 Qed.
 
-Lemma redtt_char_as_redm {X} {p : X -> Prop} {Y} {q : Y -> Prop} {x0 : X} {y0 : Y} (g : {qus : list X & truthtable } → Y) :
+Lemma redtt_char_as_redo {X} {p : X -> Prop} {Y} {q : Y -> Prop} {x0 : X} {y0 : Y} (g : {qus : list X & truthtables.truthtable } → Y) :
   Inj (=) (=) g ->
   stable p ->
   p ⪯ₜₜ q <-> tt_conds p ⪯₁ tt_conds q.
@@ -540,7 +541,7 @@ Proof.
       congruence.
     }
     {
-      eassumption.
+      exact Hg.
     }
     apply (red_tt_transitive p); try eassumption.
     eapply (conds_tt_p (x0 := x0)).
@@ -550,18 +551,16 @@ Proof.
     eapply (conds_tt_p (x0 := y0)).
 Qed.
 
-(* Require Import Eqdep_dec. *)
-
 Lemma enumerable_truthtable :
-  enumerableᵗ {qus : list nat & truthtable}.
+  enumerableᵗ {qus : list nat & truthtables.truthtable}.
 Proof.
   eapply enumerator_enumerable.
   eapply enumeratorᵗ_dep_prod. exact _.
-  intros. unfold truthtable. exact _.
+  intros. unfold truthtables.truthtable. exact _.
 Qed.
 
 Lemma eq_dec_truthtable :
-  eq_dec {qus : list nat & truthtable}.
+  eq_dec {qus : list nat & truthtables.truthtable}.
 Proof.
   clear. intros [l1 t1] [l2 t2]. red.
   decide (l1 = l2).
@@ -571,7 +570,7 @@ Proof.
   * right. inversion 1. eauto.
 Qed.
 
-Lemma generative_truthtable : generative (fun _ : {_ : list nat & truthtable} => True).
+Lemma generative_truthtable : generative (fun _ : {_ : list nat & truthtables.truthtable} => True).
 Proof.
   eapply unbounded_generative. 
   - intros x1 x2; destruct (eq_dec_truthtable x1 x2); firstorder congruence.
@@ -581,15 +580,15 @@ Proof.
       now rewrite !repeat_length in H0.
 Qed.
 
-Lemma redtt_char_as_redo {p q : nat -> Prop} :
+Lemma redtt_char_as_redo_nat {p q : nat -> Prop} :
   stable p -> 
   p ⪯ₜₜ q <-> tt_conds p ⪯₁ tt_conds q.
 Proof.
   destruct enumerable_truthtable as [f Hf].
-  unshelve eapply redtt_char_as_redm.
+  unshelve eapply redtt_char_as_redo.
   - exact 0.
   - exact 0.
-  - intros x. eapply (G (X := {qus : list nat & truthtable}) (p := fun _ => True)).
+  - intros x. eapply (G (X := {qus : list nat & truthtables.truthtable}) (p := fun _ => True)).
     + split. intros. eapply Hf. eauto.
     + eapply eq_dec_truthtable.
     + eapply generative_truthtable.
@@ -660,8 +659,6 @@ Section upper_semi_lattice.
 
 End upper_semi_lattice.
 
-Require Import Undecidability.Shared.partial.
-
 Section Turing.
 
   Context {Part : partiality}.
@@ -675,3 +672,5 @@ Section Turing.
   Notation "P ⪯ᴛ Q" := (red_Turing P Q) (at level 50).
 
 End Turing.
+
+

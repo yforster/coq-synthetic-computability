@@ -33,7 +33,7 @@ Section WO.
     - intros H. exact H.
     - intros H. apply IH. constructor. intros _. exact H.
   Defined.
-   
+
   Theorem mu_nat :
     (exists n, f n = true) -> { n | least (fun n => f n = true) 0 n }.
   Proof.

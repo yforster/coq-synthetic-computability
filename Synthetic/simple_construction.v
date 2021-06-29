@@ -1,3 +1,11 @@
+(* 
+  Author(s):
+    Felix Jahn (1)
+    Yannick Forster (1)
+  Affiliation(s):
+    (1) Saarland University, Saarbrücken, Germany
+*)
+
 Require Export Undecidability.Axioms.EA.
 Require Export Undecidability.Shared.Pigeonhole.
 Require Export Undecidability.Synthetic.FinitenessFacts.

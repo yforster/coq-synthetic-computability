@@ -3,13 +3,25 @@ Require Import Setoid Program Lia List.
 
 Axiom φ : nat -> nat -> option nat.
 
-Axiom EAB : forall p, enumerable p <-> exists c, enumerator (φ c) p.
+Axiom EAP : forall p : nat -> nat -> Prop, penumerable p -> exists γ, forall x, enumerator (φ (γ x)) (p x).
+
+Lemma EAS : forall p : nat -> nat -> Prop, enumerable (uncurry p) -> exists γ, forall x, enumerator (φ (γ x)) (p x).
+Proof.
+  intros p [γ H] % penumerable_iff % EAP; eauto.
+  eapply discrete_nat.
+Qed.
 
 Definition W c x := exists n, φ c n = Some x.
 
 Lemma W_spec : forall p, enumerable p <-> exists c, forall x, p x <-> W c x.
 Proof.
-  eapply EAB.
+  intros p.
+  split.
+  - intros [f Hf].
+    destruct (EAP (fun _ => p)) as [γ H].
+    + exists (fun _ => f). firstorder.
+    + exists (γ 0). firstorder.
+  - intros [c H]. exists (φ c). firstorder.
 Qed.
 
 Lemma do_EA p : enumerable p -> exists c, forall x, p x <-> W c x.
@@ -17,39 +29,21 @@ Proof.
   eapply W_spec.
 Qed.
 
-Axiom s : nat -> nat -> nat.
-
-Axiom SMN : forall c x y, W (s c x) y <-> W c ⟨x,y⟩.
-
-Definition EAs := exists φ, forall p : nat -> nat -> Prop, enumerable (fun! ⟨x,y⟩ => p x y) ->
-                                        exists c : nat -> nat, forall x, enumerator (φ (c x)) (p x).
+Hint Resolve discrete_nat : core.
 
 Lemma EAS' :
   forall p : nat -> nat -> Prop, enumerable (fun! ⟨x,y⟩ => p x y) ->
-                                        exists c : nat -> nat, forall x y, W (c x) y <-> p x y.
+                                        exists c : nat -> nat, forall x y, p x y <-> W (c x) y.
 Proof.
   intros p Hp.
-  destruct (do_EA _ Hp) as [c Hc].
-  exists (fun x => s c x). intros x y.
-  now rewrite SMN, <- Hc, embedP.
-Qed.
-
-Lemma EAS :
-  forall p : nat -> nat -> Prop, enumerable (uncurry p) ->
-                                        exists c : nat -> nat, forall x y, W (c x) y <-> p x y.
-Proof.
-  intros p Hp. eapply EAS'.
-  eapply enumerable_red. 4: exact Hp.
-  exists (fun! ⟨x,y⟩ => (x,y)).
-  - intros xy. now destruct (unembed xy) as [x y].
-  - eauto.
-  - now eapply discrete_prod; eapply discrete_nat.
+  eapply EAS, enumerable_red; eauto.
+  exists embed. red. intros [x y]. now rewrite embedP.
 Qed.
 
 Lemma EAS_datatype X (p : X -> nat -> Prop) (x0 : X) :
   datatype X ->
   enumerable (uncurry p) ->
-  exists c : X -> nat, forall x y, W (c x) y <-> p x y.
+  exists c : X -> nat, forall x y, p x y <-> W (c x) y.
 Proof.
   intros (I & R & HIR) Ep.
   destruct (EAS (fun x y => if R x is Some l then p l y else p x0 y)) as [c Hc].
@@ -61,22 +55,25 @@ Proof.
     + eauto.
     + eapply discrete_prod. eapply datatype_discrete. now exists I, R.
       eapply discrete_nat.
-  - exists (fun l => c (I l)). intros. now rewrite Hc, HIR.
+  - exists (fun l => c (I l)). intros. 
+    now rewrite <- (Hc (I x) y), HIR.
 Qed.
 
 Lemma EAS_list (p : list nat -> nat -> Prop) : enumerable (uncurry p) ->
                                       exists c : list nat -> nat, forall x y, W (c x) y <-> p x y.
 Proof.
-  intros. eapply EAS_datatype; eauto.
+  intros.
+  edestruct EAS_datatype with (p := p) as [c Hc]; eauto.
   - exact nil.
   - eapply enumerable_discrete_datatype.
     eapply discrete_list, discrete_nat.
-    eauto. 
+    eauto.
+  - exists c. firstorder.
 Qed.
 
 Lemma List_id : exists c_l, forall (l : list nat), forall x, W (c_l l) x <-> List.In x l.
 Proof.
-  eapply EAS_list.
+  eapply EAS_list. 
   eapply decidable_enumerable. 2:eauto.
   eapply decidable_iff. econstructor.
   intros [x y]. cbn. exact _. 
@@ -108,7 +105,7 @@ Proof.
   exists (fun x => (c, x)). exact Hc.
 Qed.
 
-Lemma SMN' : forall f, exists k, forall c x, W (k c) x <-> W c (f x).
+Lemma SMN' : forall f, exists k, forall c x, W c (f x) <-> W (k c) x.
 Proof.
   intros f.
   eapply EAS.
@@ -130,38 +127,53 @@ Proof.
   intros [x y]. cbn. exact _. 
 Qed.
 
-
 Tactic Notation "intros" "⟨" ident(n) "," ident(m) "⟩" :=
   let nm := fresh "nm" in
   let E := fresh "E" in
   intros nm; destruct (unembed nm) as [n m] eqn:E.
 
-Lemma EAS_datatype_direct X (p : X -> nat -> Prop) (x0 : X) :
-  datatype X ->
-  enumerable (uncurry p) ->
-  exists c : X -> nat, forall x y, W (c x) y <-> p x y.
-Proof.
-  intros (I & R & (R' & HIR) % (retraction_to_tight _ _ _) ) Hp.
-  assert (enumerable (fun! ⟨n,m⟩ => if R' n is Some x then p x m else False)). {
-    destruct Hp as [e He].
-    exists (fun n => if e n is Some (x, m) then Some ⟨I x, m⟩ else None).
-    intros ⟨n,m⟩.
-    split.
-    - destruct (R' n) eqn:ER; [ intros [n' H] % (He (_,_)) | intros []].
-      exists n'. rewrite H. f_equal.
-      rewrite <- embedP. rewrite unembedP.
-      rewrite <- (@unembedP nm), E. repeat f_equal. now eapply HIR.
-    - intros [n' H]. destruct (e n') as [ [x m'] | ] eqn:E2; try congruence.
-      inv H. rewrite embedP in E. inv E. destruct (HIR x) as [-> _].
-      eapply (He (_,_)). eauto.
-  }
+Definition retraction_tight {X} {Y} (I : X -> Y) R := forall x : X, R (I x) = Some x /\ forall y, R y = Some x -> I x = y.
 
-  destruct (do_EA _ H) as [c Hc].
-  exists (fun x => s c (I x)).
-  intros x y.
-  rewrite SMN, <- Hc, embedP.
-  now destruct (HIR x) as [-> _].
+From Undecidability Require Import Dec.
+
+Lemma retraction_to_tight {X} {Y} (I : X -> Y) R (HY : eq_dec Y) :
+  retraction' I R ->
+  exists R',
+  retraction_tight I R'.
+Proof.
+  exists (fun y => if R y is Some x then if Dec (y = I x) then Some x else None else None).
+  intros x. rewrite H.  destruct Dec; try congruence. split.
+  - reflexivity.
+  - intros y. destruct (R y). destruct Dec.
+    all: now intros [= ->].
 Qed.
+
+(* Lemma EAS_datatype_direct X (p : X -> nat -> Prop) (x0 : X) : *)
+(*   datatype X -> *)
+(*   enumerable (uncurry p) -> *)
+(*   exists c : X -> nat, forall x y, p x y <-> W (c x) y. *)
+(* Proof. *)
+(*   intros (I & R & (R' & HIR) % (retraction_to_tight _ _ _) ) Hp. *)
+(*   assert (enumerable (fun! ⟨n,m⟩ => if R' n is Some x then p x m else False)). { *)
+(*     destruct Hp as [e He]. *)
+(*     exists (fun n => if e n is Some (x, m) then Some ⟨I x, m⟩ else None). *)
+(*     intros ⟨n,m⟩. *)
+(*     split. *)
+(*     - destruct (R' n) eqn:ER; [ intros [n' H] % (He (_,_)) | intros []]. *)
+(*       exists n'. rewrite H. f_equal. *)
+(*       rewrite <- embedP. rewrite unembedP. *)
+(*       rewrite <- (@unembedP nm), E. repeat f_equal. now eapply HIR. *)
+(*     - intros [n' H]. destruct (e n') as [ [x m'] | ] eqn:E2; try congruence. *)
+(*       inv H. rewrite embedP in E. inv E. destruct (HIR x) as [-> _]. *)
+(*       eapply (He (_,_)). eauto. *)
+(*   } *)
+
+(*   destruct (do_EA _ H) as [c Hc]. *)
+(*   exists (fun x => s c (I x)). *)
+(*   intros x y. *)
+(*   rewrite SMN, <- Hc, embedP. *)
+(*   now destruct (HIR x) as [-> _]. *)
+(* Qed. *)
 
 Definition K0 c := W c c.
 
@@ -169,6 +181,12 @@ Lemma K0_not_enumerable : ~ enumerable (compl K0).
 Proof.
   intros [c Hc] % do_EA. specialize (Hc c).
   unfold K0, compl in Hc. tauto.
+Qed.
+
+Lemma K0_undecidable : ~ decidable (compl K0).
+Proof.
+  intros Hf % decidable_enumerable; eauto.
+  now eapply K0_not_enumerable.
 Qed.
 
 Lemma W_uncurry_red:
@@ -227,6 +245,19 @@ Proof.
   now rewrite embedP.
 Qed.
 
+Lemma m_complete_K0 : m-complete K0.
+Proof.
+  intros q Hq % m_complete_W.
+  eapply red_m_transitive. exact Hq.
+  edestruct EAS with (p := fun! ⟨x,y⟩ => fun (z : nat) => W x y) as [c Hc].
+  - eapply ReducibilityFacts.enumerable_red with (q := uncurry W); eauto.
+    2: eapply enumerable_W. all:eauto.
+    exists (fun '(xy,z) => (fun! ⟨x,y⟩ => (x,y)) xy). intros [xy z].
+    cbn. now destruct (unembed xy) as [x y]. 
+  - exists c. intros xy. unfold K0. rewrite <- (Hc xy (c xy)).
+    now destruct (unembed xy) as [x y].
+Qed.
+
 Lemma enum_iff (p : nat -> Prop) : enumerable p <-> semi_decidable p.
 Proof.
   split.
@@ -236,7 +267,7 @@ Qed.
 
 Lemma generative_W :   generative (fun! ⟨ n, m ⟩ => W n m).
 Proof.
-  eapply unbounded_generative. intros x y; destruct (PeanoNat.Nat.eq_dec x y); eauto.
+  eapply unbounded_generative. intros x y; decide (x = y); eauto.
   destruct (do_EA (fun _ => True)) as [c_top H_top]. {
     eapply decidable_enumerable. 2:eauto. exists (fun _ => true). firstorder.
   }

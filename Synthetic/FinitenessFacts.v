@@ -75,6 +75,87 @@ Proof.
   - apply LEM_exhaustible_listable.
 Qed.
 
+Lemma listable_singelton {X} (x0 : X) :
+  listable (fun x => x = x0).
+Proof.
+  exists [x0]. firstorder.
+Qed.
+
+Lemma listable_lt n1 n2 :
+  listable (fun m => n1 <= m < n2).
+Proof.
+  assert (n1 <= n2 \/ n1 > n2) as [H | H] by lia.
+  - exists (seq n1 (n2 - n1)). intros ?. rewrite in_seq.
+    replace (n1 + (n2 - n1)) with n2 by lia. reflexivity.
+  - exists []. firstorder lia.
+Qed.
+
+Lemma listable_leq n1 n2 :
+  listable (fun m => n1 <= m <= n2).
+Proof.
+  assert (n1 <= n2 \/ n1 > n2) as [H | H] by lia.
+  - exists (seq n1 (1 + n2 - n1)). intros ?. rewrite in_seq.
+    replace (n1 + (1 + n2 - n1)) with (S n2) by lia. firstorder lia.
+  - exists []. firstorder lia.
+Qed.
+
+Lemma listable_list_length_bool :
+  forall k : nat, listable (fun x : list bool => length x = k).
+Proof.
+  induction k as [ | k [L IH] ].
+  - exists [ [] ]. intros [] ; cbv ; firstorder; try lia; congruence.
+  - exists (map (cons true) L ++ map (cons false) L).
+    intros l.
+    rewrite in_app_iff, !in_map_iff. red in IH.
+    repeat setoid_rewrite <- IH.
+    destruct l as [ | [] ].
+    + cbn. split. inversion 1. firstorder congruence.
+    + cbn. split. 
+      * inversion 1. subst. eauto. 
+      * firstorder congruence.
+    + cbn. split. 
+      * inversion 1. eauto.
+      * firstorder congruence.
+Qed.
+
+Lemma listable_list_length_bool_lt : forall k : nat, listable (fun x : list bool => length x < k).
+Proof.
+  induction k as [ | k [L IH] ].
+  - exists []. intros [] ; cbv ; firstorder lia.
+  - destruct (listable_list_length_bool k) as [Lk Hk].
+    exists (L ++ Lk).
+    intros l. cbn. unfold lists in *.
+    rewrite in_app_iff, <- IH, <- Hk. lia.
+Qed.
+
+Lemma subfinite_intersection {X} {p q : X -> Prop} :
+  exhaustible p -> exhaustible (fun x => p x /\ q x).
+Proof.
+  intros [l H]. exists l.
+  intros x [H1 % H _]; eauto.
+Qed.
+
+Lemma subfinite_disjunction {X} {p q : X -> Prop} :
+  exhaustible p -> exhaustible q -> exhaustible (fun x => p x \/ q x).
+Proof.
+  intros [l1 H1] [l2 H2]. exists (l1 ++ l2).
+  intros x [H % H1| H % H2]; eapply in_app_iff; tauto.
+Qed.
+
+Lemma finite_intersection {X} {p q : X -> Prop} :
+  listable p -> ~~ listable (fun x => p x /\ q x).
+Proof.
+  intros H.
+  eapply exhaustible_listable, subfinite_intersection, listable_exhaustible, H.
+Qed.
+
+Lemma finite_disjunction {X} {p q : X -> Prop} :
+  listable p -> listable q -> listable (fun x => p x \/ q x).
+Proof.
+  intros [l1 H1] [l2 H2]. exists (l1 ++ l2).
+  intros x. red in H1, H2. now rewrite H1, H2, in_app_iff.
+Qed.
+
 (** ** Infinite types and predicates  *)
 
 Lemma non_exhaustible_non_listable {X} (p : X -> Prop) :
@@ -103,20 +184,6 @@ Qed.
 
 Definition generative {X} (p : X -> Prop) :=
   forall l : list X, exists x, p x /\ ~ In x l.
-
-Lemma generative_inhabited {X} (p: X -> Prop):
-  generative p -> exists x, p x.
-Proof.
-  intros H1. specialize (H1 []) as [x [H _]].
-  eauto.
-Qed.
-
-Lemma nonfinite_inhabited {X} (p: X -> Prop):
-  (~ exhaustible p) -> ~~ exists x, p x.
-Proof.
-  intros H1 H2.
-  apply H1. exists nil. intros x px. apply H2. exists x. exact px.
-Qed.
 
 Lemma generative_non_exhaustible {X} (p : X -> Prop) :
   generative p -> ~ exhaustible p.
@@ -430,60 +497,3 @@ Proof.
   - exists f. firstorder. eauto.
   - intros x [n <-]. apply Hf.
 Qed.
-
-
-(* Notation "'AC!!_nat' X"  := (forall R : nat -> X -> Prop, (forall n1 n2 x, R n1 x -> R n2 x -> n1 = n2) ->  (forall n, exists x, R n x) -> exists f : nat -> X, forall n, R n (f n)) (at level 10).
-
-Lemma lt_list' {X} n (P : X -> nat -> Prop) k :
-(forall m, m < n -> exists x, P x (k + m)) -> exists l, Forall2 P l (seq k n).
-Proof.
-intros H. induction n in k, H |- *; cbn.
-- exists []. econstructor.
-- edestruct (IHn (S k)) as [l IH].
-  + intros. destruct (H (S m)) as [x Hx]. lia. exists x. now assert (S k + m = k + S m) as -> by lia. 
-  + destruct (H 0 ltac:(lia)) as [x Hx]. exists (x :: l). econstructor. replace k with (k + 0) by lia. eauto. eauto.
-Qed.
-
-Lemma lt_list {X} n (P : X -> nat -> Prop) :
-(forall m, m < n -> exists x, P x m) -> exists l, Forall2 P l (seq 0 n).
-Proof.
-intros H. apply lt_list'. cbn. eassumption.
-Qed. *)
-(* 
-Require Import stdpp.list.
-
-Lemma Forall2_in_l_r {X} {Y} R l1 l2 x :
-  @Forall2 X Y R l1 l2 -> In x l1 -> exists y, R x y /\ In y l2.
-Proof.
-  induction 1.
-  - inversion 1.
-  - inversion 1; subst.
-    + eauto.
-    + eapply IHForall2 in H2 as (? & ? & ?); eauto.
-Qed. *)
-
-(* 
-require import undecidability.shared.embed_nat.
-import embednatnotations.
-
-lemma generative_dedekind_infinite_ac :
-  (forall (p : nat -> prop), unbounded p -> dedekind_infinite p) -> ac!!_nat nat.
-proof.
-  intros h r hinj htot.
-  unshelve epose proof (h (fun! ⟨n,m⟩ => r n m) _) as [f hf].
-  - intros n. unshelve epose proof (lt_list n (fun x n => r n x) _) as [l hl].
-    1: now firstorder.
-    exists l. repeat split.
-    + eapply forall2_length_r. eassumption. now rewrite seq_length.
-    + revert hl. generalize 0 as m. intros m hl. 
-      induction l in m, n, hl |- *.
-      * econstructor.
-      * destruct n; inversion hl; subst; clear hl.
-        econstructor.
-        -- intros h7. destruct (forall2_in_l_r _ _ _ _ h5 h7) as (? & ? & [] % in_seq).
-           specialize (hinj _ _ _ h0 h3) as ->. lia.
-        -- eapply ihl; eapply h5.
-    + intros ? h0. destruct (forall2_in_l_r _ _ _ _ hl h0) as (? & ? & ?). admit.
-  - exists f. intros n. specialize (hf ⟨n,f n⟩) as [h1 h2]. rewrite embedp in h1.
-qed.
-*)

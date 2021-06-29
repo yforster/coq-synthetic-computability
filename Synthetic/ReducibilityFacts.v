@@ -107,6 +107,21 @@ Section enum_red.
 
 End enum_red.
 
+Lemma enumerator_red X Y (p : X -> Prop) (q : Y -> Prop) f d g r:
+  forall H1 : decider d (eq_on Y),
+  reduces_m r p q -> enumeratorᵗ f X -> enumerator g q -> enumerator (fun! ⟨ n, m ⟩ =>
+   nth_error
+     (L r (fun n0 : nat => if g n0 is (Some x) then [x] else [])
+        (decider_eq_dec (fun H3 : Y * Y => H1 H3))
+        (fun n0 : nat => if f n0 is (Some x) then [x] else []) n) m)  p.
+Proof.
+  intros.
+  eapply list_enumerator_enumerator.
+  eapply enum_red with (p := p) (q := q); eauto.
+  eapply enumerator_list_enumerator.
+  eauto.
+Qed.
+
 Lemma enumerable_red X Y (p : X -> Prop) (q : Y -> Prop) :
   p ⪯ q -> enumerableᵗ X -> discrete Y -> enumerable q -> enumerable p.
 Proof.

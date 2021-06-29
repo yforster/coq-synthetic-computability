@@ -17,7 +17,7 @@ Section Positions.
                      | Some n => Some (S n)
                      | None => None
                      end
-    end.
+    end.  
 
   Lemma el_pos x A :
     x el A -> { n | pos x A = Some n }.
@@ -43,6 +43,43 @@ Section Positions.
       + now intros [= <-].
       + destruct (pos x A) as [k|]; intros [= <-]; cbn.
         now apply IH.
+ Qed.
+
+ Lemma pos_app_1 x A1 A2 :
+   ~ x el A2 ->
+   pos x (A1 ++ A2) = pos x A1.
+ Proof.
+   intros H.
+   induction A1.
+   - cbn. destruct (pos x A2) eqn:E; try congruence.
+     eapply pos_nthe in E as ? % nth_error_In. firstorder.
+   - cbn. destruct d.
+     + reflexivity.
+     + rewrite IHA1. reflexivity.
+ Qed.
+
+ Lemma pos_app_2 x A1 A2 :
+   ~ x el A1 ->
+   pos x (A1 ++ A2) = match pos x A2 with Some n => Some (length A1 + n) | _ => None end.
+ Proof.
+   intros H.
+   induction A1.
+   - cbn. destruct (pos x A2) eqn:E; try congruence.
+   - cbn. destruct d.
+     + subst. firstorder.
+     + rewrite IHA1; firstorder. destruct (pos x A2); firstorder. 
+ Qed.
+
+ Lemma pos_map (f : X -> X) x l:
+   Inj (=) (=) f -> pos (f x) (map f l) = pos x l.
+ Proof.
+   intros Hf.
+   induction l; cbn.
+   - reflexivity.
+   - destruct d as [-> % Hf | E].
+     + destruct d; try congruence.
+     + destruct d; try congruence.
+       now rewrite IHl.
  Qed.
 
  Lemma NoDup_nth_error l n1 n2 x :
@@ -112,10 +149,15 @@ Qed.
 Definition truthtable : Type := 
   list bool.
 
+Definition eq_dec_list_bool : forall l1 l2 : list bool, {l1 = l2} + {l1 <> l2}.
+Proof.
+  intros. repeat decide equality.
+Defined.
+
 Definition eval_tt : forall t : truthtable, forall l : list bool, bool.
 Proof.
   intros t l.
-  destruct (@pos (list bool) (ltac:(repeat decide equality)) l (gen_lists (length l))) as [i | ].
+  destruct (@pos (list bool) (eq_dec_list_bool) l (gen_lists (length l))) as [i | ].
   + destruct (nth_error t i) as [b | ].
     * exact b.
     * exact false.
@@ -161,6 +203,81 @@ Proof.
       * lia.
       * intros. eapply (Heq (S n)). lia.
 Qed.
+
+From Equations Require Import Equations.
+
+Fixpoint ext_eval_tt' (n : nat) (t : truthtable) (l : Vector.t Prop n) : Prop.
+Proof.
+  induction n.
+  - destruct t.
+    + exact False.
+    + exact (is_true b).
+  - exact ((~ ext_eval_tt' n t (Vector.tl l) -> ~ @Vector.hd Prop _ l) /\
+           (~ ext_eval_tt' n (drop (length (gen_lists n)) t) (Vector.tl l) -> @Vector.hd Prop _ l)).
+Defined.
+
+(* (* From Undecidability.Shared.Libs.PSL Require Import Vectors. *) *)
+Lemma nth_error_drop:
+  ∀ (t : truthtable) (n0 m : nat), nth_error (drop m t) n0 = nth_error t (m + n0).
+Proof.
+  intros t n0 m.
+  assert (m <= length t \/ m > length t) as [H | H] by lia.
+  - rewrite <- (firstn_skipn m t).
+    rewrite nth_error_app2.
+    rewrite drop_app_le. rewrite skipn_firstn_comm.
+    rewrite minus_diag. rewrite firstn_O. cbn. f_equal.
+    assert (length (take m t) = m). rewrite take_length. lia. lia. rewrite take_length. lia. rewrite take_length. lia.
+  - rewrite drop_ge. 2: lia.
+    assert (nth_error [] n0 = None) as -> by now destruct n0.
+    symmetry. eapply nth_error_None. lia.
+Qed.
+
+Lemma truthtable_extension' n t :
+    forall l, ext_eval_tt' n t (Vector.map (eq true) l) <-> eval_tt t (Vector.to_list l) = true.
+Proof.
+  intros. 
+  induction l in t |- *.
+  + cbn. destruct t. firstorder congruence. reflexivity.
+  + cbn. fold (Vector.to_list l). rewrite !IHl. clear.
+    unfold eval_tt. cbn.
+    destruct h.
+    * cbn. rewrite pos_app_1. 2: intros (? & [= [=]] & ?) % in_map_iff. 
+      rewrite pos_map. 2: firstorder congruence.
+      destruct pos. destruct nth_error eqn:E. 2,3 : firstorder congruence.
+      split.
+      -- intros []. destruct b. firstorder. destruct H; congruence.
+      -- intros ->. split. firstorder. firstorder.
+    * cbn. rewrite pos_app_2. 2: intros (? & [= [=]] & ?) % in_map_iff. 
+      rewrite pos_map. 2: firstorder congruence.
+      destruct pos. destruct nth_error eqn:E. all: try now firstorder congruence.
+      all: rewrite map_length.
+      all: replace (length (Vector.to_list l)) with n.
+      2, 4: clear; induction l; cbn in *; now f_equal.
+      all: generalize (length (gen_lists n)); intros m.
+      all: rewrite nth_error_drop.
+      - destruct (nth_error t (m + n0)) eqn:E2.
+        destruct b, b0; firstorder congruence.
+        destruct b; firstorder congruence.
+      - destruct (nth_error t (m + n0)) eqn:E2.
+        destruct b; firstorder congruence.
+        firstorder congruence.
+Qed.
+
+Definition ext_eval (t : truthtable) (l : list Prop) :=
+  ext_eval_tt' (length l) t (Vector.of_list l).
+
+Lemma truthtable_extension t :
+    forall l, ext_eval t (map (eq true) l) <-> eval_tt t l = true .
+Proof.
+  intros l. unfold ext_eval.
+  pose proof (truthtable_extension' (length l) t (Vector.of_list l)).
+  rewrite Vector.to_list_of_list_opp in H. rewrite <- H.
+  clear. 
+  induction l in t |- *.
+  - cbn. reflexivity.
+  - cbn. rewrite <- !IHl. now rewrite (map_length (eq true) l) at 3.
+Qed.
+
 (* 
 Require Import Eqdep_dec.
 

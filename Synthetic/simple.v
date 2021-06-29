@@ -2,7 +2,7 @@ Require Import Undecidability.Axioms.EA.
 Require Import Undecidability.Shared.Pigeonhole.
 Require Import Undecidability.Synthetic.FinitenessFacts.
 Require Import Undecidability.Synthetic.reductions Undecidability.Synthetic.truthtables.
-Require Import Undecidability.Synthetic.DecidabilityFacts Undecidability.Synthetic.SemiDecidabilityFacts.
+Require Import Undecidability.Synthetic.DecidabilityFacts Undecidability.Synthetic.SemiDecidabilityFacts Undecidability.Synthetic.ReducibilityFacts.
 Require Import Undecidability.Shared.ListAutomation.
 Require Import List Arith.
 
@@ -38,15 +38,6 @@ Proof.
   - eapply Hf. intros x. rewrite c_spec. eapply Hl.
 Qed.
 
-Lemma productive_subpredicate p :
-  productive p ->
-  exists q : nat -> Prop, enumerable q /\ dedekind_infinite q /\ (forall x, q x -> p x).
-Proof.
-  intros H.
-  eapply dedekind_infinite_problem.
-  eapply productive_dedekind_infinite. eauto.
-Qed.
-
 Lemma productive_red p q :
   p ⪯ₘ q -> productive p -> productive q.
 Proof. 
@@ -63,7 +54,9 @@ Lemma many_one_complete_subpredicate p :
   m-complete p ->
   exists q : nat -> Prop, enumerable q /\ dedekind_infinite q /\ (forall x, q x -> compl p x).
 Proof.
-  intros Hcomp. eapply productive_subpredicate.
+  intros Hcomp.
+  eapply dedekind_infinite_problem.
+  eapply productive_dedekind_infinite.
   eapply productive_red.
   - eapply red_m_complement. eapply Hcomp. eapply K0_enum.
   - eapply K0_productive. 
