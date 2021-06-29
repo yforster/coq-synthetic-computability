@@ -1,6 +1,6 @@
-From Undecidability.L.Tactics Require Import LTactics.
-From Undecidability.L Require Import UpToC.
-From Undecidability.L.Datatypes Require Export List_enc LBool.
+From Computability.L.Tactics Require Import LTactics.
+From Computability.L Require Import UpToC.
+From Computability.L.Datatypes Require Export List_enc LBool.
 
 Set Default Proof Using "Type".
 
@@ -16,7 +16,12 @@ Section forallb.
     extract.
     solverec. 
     all: unfold forallb_time, c__forallb; solverec. 
-  Defined. 
+  Qed. 
+
+  Global Instance term_forallb_notime : computable (@forallb X) . 
+  Proof.
+    extract.
+  Defined.
 
   Lemma forallb_time_eq f (l:list X):
     forallb_time f l = sumn (map f l) + length l * c__forallb + c__forallb.

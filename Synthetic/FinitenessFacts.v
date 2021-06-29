@@ -1,7 +1,7 @@
-Require Undecidability.Shared.Dec Undecidability.Shared.ListAutomation.
+Require Computability.Shared.Dec Computability.Shared.ListAutomation.
 Require Import Setoid Morphisms.
-Require Import Undecidability.Synthetic.Definitions Lia List NPeano.
-From Undecidability.Shared Require Import mu_nat equiv_on Pigeonhole Dec.
+Require Import Computability.Synthetic.Definitions Lia List NPeano.
+From Computability.Shared Require Import mu_nat equiv_on Pigeonhole Dec.
 Import ListNotations.
 
 Definition lists {X} (l : list X) (p : X -> Prop) := forall x, p x <-> List.In x l. 

@@ -1,5 +1,5 @@
 Require Import ssreflect Setoid Lia List.
-Require Import Undecidability.Shared.embed_nat Undecidability.Shared.mu_nat.
+Require Import Computability.Shared.embed_nat Computability.Shared.mu_nat.
 From Coq.Logic Require Import ConstructiveEpsilon.
 Import EmbedNatNotations ListNotations.
 

@@ -1,10 +1,10 @@
-From Undecidability.L Require Export Prelim.ARS Prelim.MoreBase.
-From Undecidability.Shared.Libs.PSL Require Export Base Bijection.
-From Undecidability.L Require Export L.
+From Computability.L Require Export Prelim.ARS Prelim.MoreBase.
+From Computability.Shared.Libs.PSL Require Export Base Bijection.
+From Computability.L Require Export L.
 
 Require Import Lia.
 
-Hint Constructors ARS.star : cbv.
+#[export] Hint Constructors ARS.star : cbv.
 
 (* * The call-by-value lambda calculus L *)
 
@@ -13,14 +13,24 @@ Hint Constructors ARS.star : cbv.
 Notation "'#' v" := (var v) (at level 1).
 (* Notation "(λ  s )" := (lam s) (right associativity, at level 0).  *)
 
+Module L_Notations_app.
+  Coercion app : term >-> Funclass. 
+End L_Notations_app.
+
+Module L_Notations.
+
+  Coercion var : nat >-> term.
+  Export L_Notations_app.
+End L_Notations.
+
 Instance term_eq_dec : eq_dec term.
 Proof.
   intros s t; unfold dec; repeat decide equality.
-Defined.
+Defined. (* because instance *)
 
 Definition term_eq_dec_proc s t := if Dec (s = t) then true else false.
 
-Hint Resolve term_eq_dec : core.
+#[export] Hint Resolve term_eq_dec : core.
 
 (* Notation using binders *)
 
@@ -34,31 +44,22 @@ Fixpoint TH n s :=
   | hter t => t
   end.
 
+
 (* TODO: should not be a coercion *)
 Definition convert := TH 0.
-Coercion convert : hoas >-> term.
-
-Module L_Notations_app.
-  Coercion app : term >-> Funclass. 
-End L_Notations_app.
-
-Module L_Notations.
-
-  Coercion var : nat >-> term.
-  Export L_Notations_app.
-End L_Notations.
 
 Module HOAS_Notations.
 
   Coercion hv : nat >-> hoas.
   Coercion ha : hoas >-> Funclass.
+  Notation "'!!' s" := (hter s) (at level 0).
+
+  Notation "[ 'L_HOAS' p ]" := (convert p) (at level 0, format  "[ 'L_HOAS'  p ]").
 
   Notation "'λ' x .. y , p" := (hl (fun x => .. (hl (fun y => p)) ..))
     (at level 100, x binder, right associativity,
      format "'[' 'λ'  '/  ' x  ..  y ,  '/  ' p ']'").
-
-  (* Coercion hter : term >-> hoas. *)
-
+     
 End HOAS_Notations.
 
 (* Use Eval simpl in (term) when defining an term using convert.
@@ -70,22 +71,20 @@ Also: remember to give the type of combinators explicitly becuase we want to use
 
 Arguments convert /.
 
-Notation "'!!' s" := (hter s) (at level 0).
 
 (* Important terms *)
 
 (* Import L_Notations. *)
 Import HOAS_Notations.
 
-Definition r : term := Eval simpl in λ r f, f (λ x , r r f x). 
-Definition R : term := app r r.
+Definition r := Eval simpl in [L_HOAS λ r f, f (λ x , r r f x) ]. 
+Definition R := app r r.
+Definition rho (s : term)  := Eval simpl in [L_HOAS λ x, !!r !!r !!s x]. 
 
-Definition rho (s : term) : term := Eval simpl in λ x, !!r !!r !!s x. 
+Definition I := Eval simpl in [L_HOAS λ x, x].
+Definition K := Eval simpl in [L_HOAS λ x y, x].
 
-Definition I : term := Eval simpl in λ x, x.
-Definition K : term := Eval simpl in λ x y, x.
-
-Definition omega : term := Eval simpl in λ x , x x.
+Definition omega : term := Eval simpl in [L_HOAS λ x , x x].
 Definition Omega : term := app omega omega.
 
 (*  Substitution *)
@@ -103,12 +102,12 @@ Proof.
   exists s; reflexivity.
 Qed.
 
-Hint Resolve lambda_lam : core.
+#[export] Hint Resolve lambda_lam : core.
 
 Instance lambda_dec s : dec (lambda s).
 Proof.
   destruct s;[right;intros C;inv C;congruence..|left;eexists;eauto].
-Defined.
+Defined. (* because instance *)
 
 
 (* Size of terms *)
@@ -200,12 +199,12 @@ Proof with try ((left; econstructor; try lia; tauto) || (right; inversion 1; try
   - induction k.
     + destruct (IHs 1)...
     + destruct (IHs (S (S k)))...
-Defined.
+Defined. (* because instance *)
 
 Instance closed_dec s : dec (closed s).
 Proof.
   decide (bound 0 s);[left|right];now rewrite closed_dcl.
-Defined.
+Defined. (* because instance *)
 
 (* ** Reduction *)
 
@@ -217,7 +216,7 @@ Inductive step : term -> term -> Prop :=
 | stepAppL s s' t  : s ≻ s' -> app s t ≻ app s' t
 where "s '≻' t" := (step s t).
 
-Hint Constructors step : core.
+#[export] Hint Constructors step : core.
 
 Ltac inv_step :=
   match goal with
@@ -314,7 +313,7 @@ Proof.
   constructor; hnf.
   - eapply starR.
   - eapply star_trans. 
-Defined.
+Qed.
 
 Lemma step_star s s':
   s ≻ s' -> s >* s'.
@@ -325,7 +324,7 @@ Qed.
 Instance step_star_subrelation : subrelation step (star step).
 Proof.
   cbv. apply step_star.
-Defined.
+Qed.
 
 Lemma star_trans_l s s' t :
   s >* s' -> app s t >* app s' t.
@@ -344,7 +343,7 @@ Instance star_step_app_proper :
 Proof.
   cbv. intros s s' A t t' B.
   etransitivity. apply (star_trans_l _ A). now apply star_trans_r.
-Defined.
+Qed.
 
 Lemma closed_star s t: s >* t -> closed s -> closed t.
 Proof.
@@ -355,7 +354,7 @@ Instance star_closed_proper :
   Proper ((star step) ==> Basics.impl) closed.
 Proof.
   exact closed_star.
-Defined.
+Qed.
 
 (*  Properties of star: *)
 
@@ -365,7 +364,7 @@ Proof.
   intros s t R u ? <-. revert s t R u.
   induction k;cbn in *;intros ? ? R ?. congruence. destruct R as [s' [R1 R2]].
   exists (app s' u). firstorder.
-Defined.
+Qed.
 
 Instance pow_step_congR k:
   Proper (eq ==>(pow step k) ==> (pow step k)) app.
@@ -373,7 +372,7 @@ Proof.
   intros s ? <- t u R. revert s t u R.
   induction k;cbn in *;intros ? ? ? R. congruence. destruct R as [t' [R1 R2]].
   exists (app s t'). firstorder.
-Defined.
+Qed.
 
 (* Equivalence *)
 
@@ -386,7 +385,7 @@ Inductive equiv : term -> term -> Prop :=
   | eqTrans s t u: s == t -> t == u -> s == u
 where "s '==' t" := (equiv s t).
 
-Hint Immediate eqRef : core.
+#[export] Hint Immediate eqRef : core.
 
 
 (* Properties of the equivalence relation *)
@@ -418,7 +417,7 @@ Proof.
   - reflexivity.
   - eapply eqTrans. econstructor; eassumption. eassumption.
 Qed.
-Hint Resolve star_equiv : core.
+#[export] Hint Resolve star_equiv : core.
 
 Instance star_equiv_subrelation : subrelation (star step) equiv.
 Proof.
@@ -514,7 +513,7 @@ Qed.
 
 Definition eval s t := s >* t /\ lambda t.
 Notation "s '⇓' t" := (eval s t) (at level 51).
-Hint Unfold eval : core.
+#[export] Hint Unfold eval : core.
 
 Lemma eval_unique s v1 v2 :
   s ⇓ v1 -> s ⇓ v2 -> v1 = v2.
@@ -533,7 +532,7 @@ Qed.
 Instance reduce_eval_proper : Proper (Basics.flip (star step) ==> eq ==> Basics.impl) eval.
 Proof.
   repeat intro. subst. unfold Basics.flip in H. destruct H1. split. etransitivity. eassumption. assumption. assumption.
-Defined.
+Qed.
 
 Instance equiv_eval_proper: Proper (equiv ==> eq ==> Basics.impl) eval.
 Proof.
@@ -621,7 +620,7 @@ Lemma evalIn_trans s t u i j :
 Proof.
   intros R1 [R2 lam].
   split; eauto using pow_trans.  
-Defined.
+Qed.
 
 Lemma redLe_trans s t u i j :
   s >(<=i) t -> t >(<=j) u -> s >(<=i+j) u.
@@ -641,7 +640,7 @@ Lemma evalLe_trans s t u i j :
 Proof.
   intros R1 [R2 lam].
   split; eauto using redLe_trans.  
-Defined.
+Qed.
 
 Instance pow0_refl : Reflexive (pow step 0).
 Proof.

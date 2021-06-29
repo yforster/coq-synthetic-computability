@@ -1,4 +1,5 @@
-From Undecidability.L Require Import Tactics.LTactics Datatypes.LNat Functions.EqBool Datatypes.LTerm.
+From Computability.L Require Import Tactics.LTactics Functions.EqBool.
+From Computability.L.Datatypes Require Import LNat LTerm LBool.
 Require Import Nat .
 Import EqBool.
 

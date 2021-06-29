@@ -1,5 +1,5 @@
-From Undecidability.Shared.Libs.PSL Require Import Prelim.
-From Undecidability.Shared.Libs.PSL Require Import EqDec.
+From Computability.Shared.Libs.PSL Require Import Prelim.
+From Computability.Shared.Libs.PSL Require Import EqDec.
 
 (* ** Numbers **)
 

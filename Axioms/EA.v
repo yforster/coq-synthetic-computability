@@ -1,4 +1,4 @@
-From Undecidability Require Import Synthetic.DecidabilityFacts Synthetic.SemiDecidabilityFacts Synthetic.EnumerabilityFacts Synthetic.ListEnumerabilityFacts reductions partial embed_nat ReducibilityFacts truthtables.
+From Computability Require Import Synthetic.DecidabilityFacts Synthetic.SemiDecidabilityFacts Synthetic.EnumerabilityFacts Synthetic.ListEnumerabilityFacts reductions partial embed_nat ReducibilityFacts truthtables.
 Require Import Setoid Program Lia List.
 
 Axiom φ : nat -> nat -> option nat.
@@ -134,7 +134,7 @@ Tactic Notation "intros" "⟨" ident(n) "," ident(m) "⟩" :=
 
 Definition retraction_tight {X} {Y} (I : X -> Y) R := forall x : X, R (I x) = Some x /\ forall y, R y = Some x -> I x = y.
 
-From Undecidability Require Import Dec.
+From Computability Require Import Dec.
 
 Lemma retraction_to_tight {X} {Y} (I : X -> Y) R (HY : eq_dec Y) :
   retraction' I R ->

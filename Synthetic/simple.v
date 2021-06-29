@@ -1,9 +1,9 @@
-Require Import Undecidability.Axioms.EA.
-Require Import Undecidability.Shared.Pigeonhole.
-Require Import Undecidability.Synthetic.FinitenessFacts.
-Require Import Undecidability.Synthetic.reductions Undecidability.Synthetic.truthtables.
-Require Import Undecidability.Synthetic.DecidabilityFacts Undecidability.Synthetic.SemiDecidabilityFacts Undecidability.Synthetic.ReducibilityFacts.
-Require Import Undecidability.Shared.ListAutomation.
+Require Import Computability.Axioms.EA.
+Require Import Computability.Shared.Pigeonhole.
+Require Import Computability.Synthetic.FinitenessFacts.
+Require Import Computability.Synthetic.reductions Computability.Synthetic.truthtables.
+Require Import Computability.Synthetic.DecidabilityFacts Computability.Synthetic.SemiDecidabilityFacts Computability.Synthetic.ReducibilityFacts.
+Require Import Computability.Shared.ListAutomation.
 Require Import List Arith.
 
 Import ListNotations ListAutomationNotations.

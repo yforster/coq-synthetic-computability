@@ -1,9 +1,9 @@
 From stdpp Require Import prelude.
 Require Import ssreflect.
 
-From Undecidability.Synthetic Require Import Definitions DecidabilityFacts EnumerabilityFacts.
-From Undecidability.Shared Require Import Dec.
-From Undecidability.Synthetic Require Import reductions.
+From Computability.Synthetic Require Import Definitions DecidabilityFacts EnumerabilityFacts.
+From Computability.Shared Require Import Dec.
+From Computability.Synthetic Require Import reductions.
 
 Require Import Equations.Prop.Subterm Equations.Prop.DepElim.
 From Equations Require Import Equations.
@@ -84,7 +84,7 @@ Section fixes.
   Variable eX : eq_dec X.
   Variable eY : eq_dec Y.
   
-  Unset Equations With Funext.
+  (* Unset Equations With Funext. *)
 
   (* Ltac Subterm.unfold_FixWf ::= *)
   (*   match goal with *)

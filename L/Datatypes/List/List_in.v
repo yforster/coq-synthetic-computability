@@ -1,8 +1,8 @@
-From Undecidability.L.Tactics Require Import LTactics.
-From Undecidability.L Require Import UpToC.
-From Undecidability.L Require Import Functions.EqBool.
+From Computability.L.Tactics Require Import LTactics.
+From Computability.L Require Import UpToC.
+From Computability.L Require Import Functions.EqBool.
 
-From Undecidability.L.Datatypes Require Export List.List_enc.
+From Computability.L.Datatypes Require Export List.List_enc.
 Set Default Proof Using "Type".
 
 Section list_in.
@@ -93,7 +93,7 @@ Section list_in_time.
     (fun a _ => (5, fun b _ => (list_incl_decb_time a b, tt))). 
   Proof. 
     extract. solverec. all: unfold c__list_incl_decb; solverec. 
-  Defined. 
+  Qed.
 End list_in_time. 
 
 
@@ -145,5 +145,5 @@ Section dupfree_dec_time.
   Proof.
     extract. 
     solverec. all: unfold c__dupfreeb; solverec. 
-  Defined.
+  Qed.
 End dupfree_dec_time. 

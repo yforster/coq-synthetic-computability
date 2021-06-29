@@ -1,5 +1,5 @@
-Require Export Undecidability.Shared.Libs.PSL.Base Lia.
-From Undecidability.L Require Export MoreList.
+Require Export Computability.Shared.Libs.PSL.Base Lia.
+From Computability.L Require Export MoreList.
 
 (* * Preliminaries *)
 
@@ -31,10 +31,12 @@ Qed.
 
 
 Instance max_le_proper : Proper (le ==> le ==> le) max.
+Proof.
 repeat intro. repeat eapply Nat.max_case_strong;lia.
 Qed.
 
 Instance min_le_proper : Proper (le ==> le ==> le) min.
+Proof.
 repeat intro. repeat eapply Nat.min_case_strong;lia.
 Qed.
 

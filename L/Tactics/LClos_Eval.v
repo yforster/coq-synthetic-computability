@@ -1,4 +1,4 @@
-From Undecidability.L.Tactics Require Export LClos.
+From Computability.L.Tactics Require Export LClos.
 Require Import FunInd. 
 Open Scope LClos.
 
@@ -56,7 +56,7 @@ Proof with repeat (apply validCompApp ||apply validCompClos || eauto || congruen
   -destruct s0...
 Qed.
 
-Hint Resolve CompSeval_validComp : core.
+#[export] Hint Resolve CompSeval_validComp : core.
 
 Lemma CompBeta_sound s t u: CompBeta s t = Some u -> s t >[(1)] u.
 Proof with repeat (auto || congruence || subst || simpl in * || intuition).

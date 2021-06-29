@@ -1,6 +1,6 @@
-From Undecidability.L Require Import Util.L_facts.
+From Computability.L Require Import Util.L_facts.
 Require Import ListTactics.
-From Undecidability.L.Tactics Require Import Lproc Reflection. 
+From Computability.L.Tactics Require Import Lproc Reflection. 
 
 (* *** Lbeta: symbolic beta reduction *)
 
@@ -8,8 +8,9 @@ From Undecidability.L.Tactics Require Import Lproc Reflection.
 It does so by the reflective tactic simplify_L' using the module Reflextion. *)
 
 Lemma eval_helper s t u: s >* u -> eval u t -> eval s t.
+Proof.
   intros R H. now rewrite R.
-Defined.
+Qed.
 
 Ltac addToList a l := AddFvTail a l.
 
@@ -27,12 +28,12 @@ Proof.
    +lia.
    +reflexivity.
   -Lproc.
-Defined.
+Qed.
 
 Lemma eval_refl s : lambda s -> s ⇓ s.
 Proof.
   intros. split. reflexivity. Lproc.
-Defined.
+Qed.
 
 
 (*make all variables to coq-variables in the context *)
@@ -123,7 +124,7 @@ Ltac simplify_L' n:=
       pose (phi := Reflection.liftPhi vars);
       let pp := fresh "pp" in
       let cs := fresh "cs" in
-      assert (pp:Reflection.Proc phi) by (ProcPhi vars;shelve);
+      assert (pp:Reflection.Proc phi) by (ProcPhi vars);
       assert (cs :Reflection.rClosed phi s') by (simple apply Reflection.rClosed_decb_correct;[exact pp|vm_cast_no_check (@eq_refl bool true) ]);
       let R := fresh "R" in
       assert (R:= Reflection.rStandardizeUsePow n pp cs);
@@ -140,6 +141,7 @@ Ltac simplify_L' n:=
 
 
 Lemma pow_trans_eq: forall (s t u : term) (i j k: nat), s >(i) t -> t >(j) u -> i+j=k -> s >(k) u.
+Proof.
   intros. subst. eapply pow_trans;eauto. 
 Qed.
 
@@ -173,7 +175,7 @@ Ltac Lbeta' n :=
     | |- ?G => fail "Not supported for LSimpl (or other failed):" G 
     end;
     once lazymatch goal with
-      |- ?rel s _ => fail "No Progress (progress in indexes are not currently noticed...)"
+      |- ?rel s _ => fail "No Progress in beta' in " rel s "(progress in indexes are not currently noticed...)"
     | |- _ => idtac
     (* don;t change evars if you did not make progress!*)
     end

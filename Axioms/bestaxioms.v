@@ -1,4 +1,4 @@
-From Undecidability Require Import Synthetic.DecidabilityFacts Synthetic.EnumerabilityFacts Synthetic.SemiDecidabilityFacts reductions partial embed_nat.
+From Computability Require Import Synthetic.DecidabilityFacts Synthetic.EnumerabilityFacts Synthetic.SemiDecidabilityFacts reductions partial embed_nat.
 Require Import Setoid Program Lia.
 
 (** * Axioms for synthetic computability *)
@@ -207,7 +207,7 @@ End EPF.
 Definition EA := exists ψ : nat -> (nat -> option nat),
     forall p : nat -> nat -> Prop, penumerable p -> exists γ, parametric_enumerator (fun x => ψ (γ x)) p.
 
-From Undecidability Require Import reductions ReducibilityFacts EnumerabilityFacts ListEnumerabilityFacts.
+From Computability Require Import reductions ReducibilityFacts EnumerabilityFacts ListEnumerabilityFacts.
 
 Lemma EA_iff_enumerable :
   EA <-> exists ψ : nat -> (nat -> option nat),
@@ -256,7 +256,7 @@ Proof.
     eapply (Hf (x,y')). eauto.
 Qed.
 
-Require Import Undecidability.Synthetic.ReducibilityFacts.
+Require Import Computability.Synthetic.ReducibilityFacts.
 
 Fixpoint mk_mono {X} (f : nat -> option X) (n : nat) : option X :=
   match n with

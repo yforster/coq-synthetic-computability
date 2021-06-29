@@ -1,9 +1,9 @@
 Set Implicit Arguments.
 Unset Strict Implicit.
 Require Import stdpp.list stdpp.list_numbers.
-From Undecidability Require Import Synthetic.DecidabilityFacts Synthetic.SemiDecidabilityFacts Synthetic.EnumerabilityFacts reductions partial Axioms.axioms  principles Shared.Dec.
+From Computability Require Import Synthetic.DecidabilityFacts Synthetic.SemiDecidabilityFacts Synthetic.EnumerabilityFacts reductions partial Axioms.axioms  principles Shared.Dec.
 Require Import ssreflect Nat.
-Require Import Undecidability.Shared.FilterFacts.
+Require Import Computability.Shared.FilterFacts.
 
 Section Reverse_Induction.
 
@@ -190,7 +190,7 @@ Lemma not_bounded_infinite' :
   ∀ T, (∀ x : list bool, dec (T x)) → ¬ bounded_tree' T → infinite_tree T.
 Proof.
   intros T D H k. cbn in *. enough (exists a, T a /\ length a = k) as [a [H1 H2]]. exists a. split. eassumption. lia.
-  setoid_rewrite and_comm.
+  enough (∃ a : list bool, length a = k /\ T a) by firstorder.         
   edestruct (listable_exists_dec (X := list bool)).
   3:{ eapply e. }
   -- eapply listable_list_length.

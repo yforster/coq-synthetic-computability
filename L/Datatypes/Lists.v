@@ -1,14 +1,14 @@
-From Undecidability.L.Tactics Require Import LTactics GenEncode.
-From Undecidability.L Require Import Functions.EqBool.
-From Undecidability.L.Datatypes Require Import LBool LNat LOptions LProd.
-From Undecidability.L Require Import UpToC.
+From Computability.L.Tactics Require Import LTactics GenEncode.
+From Computability.L Require Import Functions.EqBool.
+From Computability.L.Datatypes Require Import LBool LNat LOptions LProd.
+From Computability.L Require Import UpToC.
 
 (* ** Encoding of lists *)
 
-From Undecidability.L.Datatypes.List Require List_enc.
+From Computability.L.Datatypes.List Require List_enc.
 Include List_enc.
 
-From Undecidability.L.Datatypes.List Require Export List_basics List_eqb List_extra List_fold List_in List_nat.
+From Computability.L.Datatypes.List Require Export List_basics List_eqb List_extra List_fold List_in List_nat.
 
 
 Definition c__listsizeCons := 5.

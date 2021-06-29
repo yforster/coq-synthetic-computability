@@ -1,4 +1,4 @@
-From Undecidability.Shared.Libs.PSL Require Export Prelim EqDec.
+From Computability.Shared.Libs.PSL Require Export Prelim EqDec.
 
 Export ListNotations.
 Notation "x 'el' A" := (In x A) (at level 70).

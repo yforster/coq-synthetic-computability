@@ -1,11 +1,11 @@
-Require Import Undecidability.L.Datatypes.LNat.
-Require Import Undecidability.L.Datatypes.List.List_in Undecidability.L.Datatypes.List.List_basics.
-Require Import Undecidability.L.Functions.Unenc.
-Require Import Undecidability.Shared.ListAutomation.
-Require Import Undecidability.Shared.embed_nat.
+Require Import Computability.L.Datatypes.LNat.
+Require Import Computability.L.Datatypes.List.List_in Computability.L.Datatypes.List.List_basics.
+Require Import Computability.L.Functions.Unenc.
+Require Import Computability.Shared.ListAutomation.
+Require Import Computability.Shared.embed_nat.
 
-Require Import Undecidability.L.Datatypes.List.List_extra Undecidability.L.Datatypes.LProd.
-Require Import Undecidability.L.Datatypes.LTerm Undecidability.L.Functions.Eval.
+Require Import Computability.L.Datatypes.List.List_extra Computability.L.Datatypes.LProd.
+Require Import Computability.L.Datatypes.LTerm Computability.L.Functions.Eval.
 
 Import ListNotations ListAutomationNotations EmbedNatNotations.
 
@@ -108,10 +108,10 @@ Definition T_L (c : nat) (x : nat) (n : nat) :=
 (*   extract. *)
 (* Qed. *)
 
-Require Import Undecidability.Axioms.bestaxioms.
-Require Import Undecidability.L.Util.L_facts Undecidability.L.Computability.Seval.
-Require Import Undecidability.Synthetic.ListEnumerabilityFacts Undecidability.Synthetic.EnumerabilityFacts Undecidability.Synthetic.DecidabilityFacts.
-Require Import Undecidability.Shared.ListAutomation Undecidability.Shared.Dec.
+Require Import Computability.Axioms.bestaxioms.
+Require Import Computability.L.Util.L_facts Computability.L.Computability.Seval.
+Require Import Computability.Synthetic.ListEnumerabilityFacts Computability.Synthetic.EnumerabilityFacts Computability.Synthetic.DecidabilityFacts.
+Require Import Computability.Shared.ListAutomation Computability.Shared.Dec.
 
 Lemma list_enumerator_term_correct : list_enumeratorᵗ list_enumerator_term term.
 Proof with (try eapply cum_ge'; eauto; lia).
@@ -143,7 +143,7 @@ Proof.
   destruct bound_dec. reflexivity. tauto.
 Qed.
 
-Goal SMN_for T_L.
+Theorem SMN : SMN_for T_L.
 Proof.
   red.
   unfold T_L.
@@ -163,7 +163,7 @@ Proof.
     assert (Eq : (L.app
              (lam
                 (L.app t (L.app (ext embed) (L.app (L.app (ext (@pair nat nat)) (enc x)) # 0))))
-             (enc y)) == L.app t (enc ⟨ x, y ⟩)). symmetry in E. Lsimpl.
+             (enc y)) == L.app t (enc ⟨ x, y ⟩)). symmetry in E. now Lsimpl.
     rewrite E in Eq.
     eapply equiv_eva in Eq as [m H].
     exists m. cbn in *.
@@ -174,7 +174,7 @@ Proof.
     eapply eva_equiv in E.
     assert (L.app t (enc (embed (x, y))) == nat_enc v). {
       rewrite <- E.
-      symmetry. Lsimpl. }
+      symmetry. now Lsimpl. }
     eapply equiv_eva in H as [m H].
     exists m. cbn in *.
     now rewrite H. eapply nat_enc_proc.
@@ -183,7 +183,7 @@ Qed.
 
 Definition CT_L := CT T_L.
 
-From Undecidability.L Require Import Synthetic.
+From Computability.L Require Import Synthetic.
 
 Definition CT_L_elem :=
   forall f : nat -> nat, exists t : term, closed t /\ forall n, L.eval (L.app t (enc n)) (enc (f n)).
@@ -264,13 +264,14 @@ Proof.
     specialize (Ht2 n) as ? % eval_iff.
     econstructor 2.
     eapply step_beta. cbn. rewrite Ht1. reflexivity. Lproc.
-    Lsimpl.
+    now Lsimpl.
   - intros ct f.
     specialize (ct (fun x => f x = true)) as (g & [Ht1] & Ht2). firstorder.
     exists (ext g). split. Lproc.
     intros. eapply eval_iff. Lsimpl.
-    specialize (Ht2 n). destruct (g n), (f n); try Lsimpl.
-    all: enough (false = true) by congruence; tauto.
+    specialize (Ht2 n). destruct (g n), (f n).
+    1, 4: split; try reflexivity; Lproc.
+    all: try (enough (false = true) by congruence; tauto).
 Qed.
 
 Lemma CT_L_elem_to_CT_L_elem_bool :
@@ -284,8 +285,8 @@ Proof.
   split. 2:Lproc.
   econstructor.
   eapply step_beta with (t := t (enc n) (enc true) (lam (enc false))). 2:Lproc.
-  1:{ cbn. rewrite !subst_closed; Lproc. reflexivity. }
-  Lsimpl. destruct (f n); Lsimpl. 
+  1:{ cbn. rewrite !subst_closed; try Lproc. reflexivity. }
+  Lsimpl. destruct (f n); now try Lsimpl.
 Qed.
 
 Lemma CT_L_elem_bool_to_CT_L_semidecidable :
@@ -299,7 +300,7 @@ Proof.
   intros. subst.
   eexists. split. 
   econstructor 2. eapply step_beta.
-  cbn. rewrite !subst_closed; Lproc. reflexivity.
+  cbn. rewrite !subst_closed; try Lproc. reflexivity.
   2:reflexivity. Lproc.
   split. Lproc.
   intros. subst. eexists.
@@ -308,8 +309,8 @@ Proof.
   rewrite embedP in H2.
   etransitivity.
   econstructor 2. eapply step_beta.
-  cbn. rewrite !subst_closed. all: Lproc. reflexivity.
-  reflexivity. eapply eval_iff in H2. Lsimpl. 
+  cbn. rewrite !subst_closed. all: try Lproc. reflexivity.
+  reflexivity. eapply eval_iff in H2. now Lsimpl. 
 Qed.
 
 Lemma CT_L_semidecidable_to_CT_L_enumerable :
@@ -334,7 +335,7 @@ Proof.
   - intros [n [= <-]]. eauto.
 Qed.
 
-Require Import Undecidability.L.Computability.MuRec.
+Require Import Computability.L.Computability.MuRec.
 
 Lemma CT_L_enumerable_to_CT_L_elem :
   CT_L_enumerable -> CT_L_elem.
@@ -370,14 +371,14 @@ Proof.
     eapply mu_sound in H0 as (m & -> % inj_enc & H2 & H3); try Lproc.
     2: intros; eexists; now Lsimpl.
     assert (Heq : h x m = true). { 
-      eapply enc_extinj. rewrite <- H2. symmetry. Lsimpl.
+      eapply enc_extinj. rewrite <- H2. symmetry. now Lsimpl.
     }
     unfold h in Heq.
     destruct (g m) eqn:E1; try congruence.
     destruct (unembed n0) eqn:E2.
     eapply beq_nat_true in Heq as ->.
     unfold h2. rewrite E1, E2.
-    enough (n2 = f n1) as ->. Lsimpl.
+    enough (n2 = f n1) as ->. split. reflexivity. Lproc.
     eapply (f_equal embed) in E2. rewrite unembedP in E2.
     subst.
     specialize (Hg2 ⟨n1,n2⟩) as [_ [x HH]]. eauto.
@@ -396,9 +397,9 @@ Proof.
     split. 1:Lproc. intros n. specialize (H2 n).
     destruct (f n) eqn:E.
     + left. split. 1:tauto.
-      eapply eval_iff. Lsimpl. rewrite E. Lsimpl.
+      eapply eval_iff. Lsimpl. rewrite E. split; [ reflexivity | Lproc].
     + right. split. 1: intros ? % H2; congruence.
-      eapply eval_iff. Lsimpl. rewrite E. Lsimpl.
+      eapply eval_iff. Lsimpl. rewrite E. split; [ reflexivity | Lproc].
   - intros (t & H1 & H2).
     unshelve eexists.
     + intros n.
@@ -412,10 +413,10 @@ Proof.
       destruct (H2 n) as [[_ H % eval_iff] | [_ H % eval_iff]]; eauto.
       * eapply N1. eapply unique_normal_forms. 1:eapply Hb.
         1:Lproc. destruct Hb as [Hb _]. rewrite <- Hb.
-        destruct H as [H _]. Lsimpl.
+        destruct H as [H _]. now Lsimpl.
       * eapply N2. eapply unique_normal_forms. 1:eapply Hb.
         1:Lproc. destruct Hb as [Hb _]. rewrite <- Hb.
-        destruct H as [H _]. Lsimpl.
+        destruct H as [H _]. now Lsimpl.
     + intros n.
       destruct (@informative_eval2 (t (enc n))) as [b Hb]. cbn.
       destruct term_eq_dec as [-> | N1]; cbn.
@@ -424,7 +425,7 @@ Proof.
         enough (He : enc true = enc false) by (cbv in He; congruence).
         eapply unique_normal_forms. 1:eapply Hb.
         1:Lproc. destruct Hb as [Hb _]. rewrite <- Hb.
-        destruct H as [H _]. Lsimpl.
+        destruct H as [H _]. now Lsimpl.
       * destruct term_eq_dec as [-> | N2]; cbn.
         -- split; intros ?; try congruence.
            exfalso; revert H.
@@ -432,15 +433,15 @@ Proof.
            enough (He : enc true = enc false) by (cbv in He; congruence).
            eapply unique_normal_forms. 1:Lproc. 1:eapply Hb.
            destruct Hb as [Hb _]. rewrite <- Hb.
-           destruct H as [H _]. Lsimpl.
+           destruct H as [H _]. now Lsimpl.
         -- exfalso.
            destruct (H2 n) as [[_ H % eval_iff] | [_ H % eval_iff]].
            ++ eapply N1. eapply unique_normal_forms. 1:eapply Hb.
               1:Lproc. destruct Hb as [Hb _]. rewrite <- Hb.
-              destruct H as [H _]. Lsimpl.
+              destruct H as [H _]. now Lsimpl.
            ++ eapply N2. eapply unique_normal_forms. 1:eapply Hb.
               1:Lproc. destruct Hb as [Hb _]. rewrite <- Hb.
-              destruct H as [H _]. Lsimpl.
+              destruct H as [H _]. now Lsimpl.
 Qed.
 
 Lemma HaltL_semidecidable :
@@ -465,26 +466,26 @@ Proof.
     + intros [n Hn].
       edestruct (@mu_complete (lam (ext f (enc x) 0))) as [v Hv].
       * Lproc.
-      * intros n'. exists (f x n'). Lsimpl.
+      * intros n'. exists (f x n'). now Lsimpl.
       * instantiate (1 := n). Lsimpl. now rewrite Hn.
       * exists (ext v). eapply eval_iff.
-        Lsimpl. rewrite Hv. Lsimpl.
+        Lsimpl. rewrite Hv.  split; [ reflexivity | Lproc].
     + intros [v Hv % eval_iff].
-      assert (lam (mu (lam (ext f 1 0))) (enc x) == mu (lam (ext f (enc x) 0))) by (clear Hv; Lsimpl).
+      assert (lam (mu (lam (ext f 1 0))) (enc x) == mu (lam (ext f (enc x) 0))) by (clear Hv; now Lsimpl).
       rewrite H in Hv. edestruct (@mu_sound (lam (ext f (enc x) 0))) as [n [H3 [H4 _]]].
       3: eapply Hv.
       * Lproc.
-      * intros n'. exists (f x n'). Lsimpl.
-      * Lsimpl.
+      * intros n'. exists (f x n'). now Lsimpl.
+      * now Lsimpl.
       * exists n. subst.
-        eapply enc_extinj. rewrite <- H4. symmetry. Lsimpl.
+        eapply enc_extinj. rewrite <- H4. symmetry. now Lsimpl.
   - intros (t & H1 & H2).
     destruct (HaltL_semidecidable) as [g Hg].
     exists (fun x n => g (t (enc x)) n). red in Hg. intros x.
     now rewrite H2, Hg.
 Qed.
 
-From Undecidability Require Import principles.
+From Computability Require Import principles.
 
 Lemma CT_L_MP_equiv :
   CT_L ->
@@ -499,7 +500,7 @@ Proof.
     + eapply (H2 0). eapply He. now rewrite <- H2.
 Qed.
 
-From Undecidability Require Import reductions.
+From Computability Require Import reductions.
 
 Lemma CT_L_enumerable_equiv :
   CT_L -> forall p : nat -> Prop, enumerable p <-> p ⪯ₘ HaltL.
@@ -686,7 +687,7 @@ Qed.
 
 (* Print Assumptions SMN'. *)
 
-(* Require Import Undecidability.Synthetic.truthtables. *)
+(* Require Import Computability.Synthetic.truthtables. *)
 
 (* Lemma bla {X} f  : decider f (fun x : X => f x = true). *)
 (* Proof. *)

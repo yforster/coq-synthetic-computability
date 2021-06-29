@@ -1,7 +1,7 @@
 From Coq.Logic Require Import ConstructiveEpsilon.
 Require Import Lia Nat.
 From stdpp Require Import numbers list list_numbers.
-From Undecidability Require Import SemiDecidabilityFacts DecidabilityFacts EnumerabilityFacts halting reductions Axioms.axioms.
+From Computability Require Import SemiDecidabilityFacts DecidabilityFacts EnumerabilityFacts halting reductions Axioms.axioms.
 
 (** * CT in relation to other axioms  *)
 
@@ -703,9 +703,9 @@ Proof.
   split; eauto. eapply mp.
 Qed.
 
-Require Import Undecidability.Synthetic.FinitenessFacts.
+Require Import Computability.Synthetic.FinitenessFacts.
 
-Require Import Undecidability.Shared.Dec.
+Require Import Computability.Shared.Dec.
 
 Lemma semi_decidable_generative (p : nat -> Prop) :
   MP -> semi_decidable p ->

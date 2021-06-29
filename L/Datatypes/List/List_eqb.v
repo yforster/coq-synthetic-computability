@@ -1,8 +1,8 @@
-From Undecidability.L.Tactics Require Import LTactics.
-From Undecidability.L Require Import UpToC.
-From Undecidability.L Require Import Functions.EqBool.
+From Computability.L.Tactics Require Import LTactics.
+From Computability.L Require Import UpToC.
+From Computability.L Require Import Functions.EqBool.
 
-From Undecidability.L.Datatypes Require Export List.List_enc LBool LOptions LNat.
+From Computability.L.Datatypes Require Export List.List_enc LBool LOptions LNat.
 
 Set Default Proof Using "Type".
 
@@ -37,12 +37,12 @@ Section Fix_X.
   Proof.
     extract.
     solverec. 
-  Defined.
+  Defined. (*because other extract*)
 
   Global Instance term_inb_notime: computable inb.
   Proof.
     extract.
-  Defined.
+  Defined. (*because other extract*)
 
 
 
@@ -85,6 +85,11 @@ Section int.
   Proof.
     extract.
     solverec.                                                                                             
+  Qed.
+
+  Global Instance term_list_eqb_notime : computable(list_eqb (X:=X)).
+  Proof.
+    extract.                                     
   Defined.
 
   Definition list_eqbTime_leq (eqbT: timeComplexity (X -> X -> bool)) (A B:list X) k:

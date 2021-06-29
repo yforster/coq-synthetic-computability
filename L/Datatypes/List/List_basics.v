@@ -1,7 +1,7 @@
-From Undecidability.L.Tactics Require Import LTactics.
-From Undecidability.L Require Import UpToC.
-From Undecidability.L.Datatypes Require Export List.List_enc LBool LNat.
-From Undecidability.Shared.Libs.PSL.Lists Require Export Filter.
+From Computability.L.Tactics Require Import LTactics.
+From Computability.L Require Import UpToC.
+From Computability.L.Datatypes Require Export List.List_enc LBool LNat.
+From Computability.Shared.Libs.PSL.Lists Require Export Filter.
 
 Set Default Proof Using "Type".
 
@@ -23,7 +23,7 @@ Instance term_map (X Y:Type) (Hx : registered X) (Hy:registered Y): computableTi
 Proof.
   extract.
   solverec. all: unfold c__map; solverec. 
-Defined.
+Defined. (*because other extract*)
 
 
 Lemma map_time_const {X} c (xs:list X):
@@ -42,7 +42,7 @@ Qed.
 Instance term_map_noTime (X Y:Type) (Hx : registered X) (Hy:registered Y): computable (@map X Y).
 Proof.
   extract.
-Defined.
+Defined. (*because other extract*)
   
 Instance termT_rev_append X `{registered X}: computableTime' (@rev_append X) (fun l _ => (5,fun res _ => (length l*13+4,tt))).
 extract.
@@ -69,14 +69,14 @@ Section Fix_X.
                                                                         | x :: l0 => (fun r => if f x then x :: r else r) (filter l0)
                                                                         end)).
     extract.
-    solverec.
-  Defined.
+    solverec. 
+  Defined. (*because other extract*)
 
   Global Instance term_filter_notime: computable (@filter X).
   Proof using intX.
   pose (t:= extT (@filter X)). hnf in t. 
     computable using t.
-  Defined.
+  Defined. (*because other extract*)
 
   Global Instance term_repeat: computable (@repeat X).
   Proof using intX.
@@ -133,11 +133,10 @@ Section concat.
     eapply computableTimeExt with (x := fun l => rev (rev_concat [] l)).
     -intros l;hnf. rewrite rev_concat_rev. easy.
     -extract. solverec. unfold time. reflexivity.
-    -unfold time. setoid_rewrite rev_concat_length. setoid_rewrite length_concat. smpl_upToC_solve.
+    -unfold time. smpl_upToC; try smpl_upToC_solve.
+     setoid_rewrite rev_concat_length. setoid_rewrite length_concat. smpl_upToC_solve.
   Qed.
 
   Global Instance term_concat : computableTime' (@concat X) _ := projT2 _term_concat.
-
-
 
 End concat.

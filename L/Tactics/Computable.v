@@ -1,5 +1,5 @@
-From Undecidability.L Require Export Util.L_facts Tactics.Extract.
-Require Import Undecidability.Shared.Libs.PSL.Bijection String.
+From Computability.L Require Export Util.L_facts Tactics.Extract.
+Require Import Computability.Shared.Libs.PSL.Bijection String.
 
 (* * Correctness and time bounds *)
 
@@ -13,7 +13,7 @@ Class registered (X : Type) := mk_registered
     inj_enc : injective enc (* encoding is injective *)
   }.
 
-Hint Mode registered + : typeclass_instances. (* treat argument as input and force evar-freeness*)
+#[export] Hint Mode registered + : typeclass_instances. (* treat argument as input and force evar-freeness*)
 
 Arguments enc : simpl never.  (* Never unfold with cbn/simpl *)
 
@@ -33,7 +33,7 @@ Existing Instance TyArr.
 Arguments TyB _ {_}.
 Arguments TyArr {_} {_} _ _.
 
-Hint Mode TT + : typeclass_instances. (* treat argument as input and force evar-freeness*)
+#[export] Hint Mode TT + : typeclass_instances. (* treat argument as input and force evar-freeness*)
 
 Notation "! X" := (TyB X) (at level 69).
 Notation "X ~> Y" := (TyArr X Y) (right associativity, at level 70).
@@ -68,8 +68,8 @@ Global Arguments computable {X} {ty} x.
 Global Arguments extCorrect {X} ty x {computable} : simpl never.
 Global Arguments ext {X} {ty} x {computable} : simpl never.
 
-Hint Mode computable + - +: typeclass_instances. (* treat argument as input and force evar-freeness*)
-Hint Extern 4 (@extracted ?t ?f) => let ty := constr:(_ : TT t) in notypeclasses refine (ext (ty:=ty) f) : typeclass_instances.
+#[export] Hint Mode computable + - +: typeclass_instances. (* treat argument as input and force evar-freeness*)
+#[export] Hint Extern 4 (@extracted ?t ?f) => let ty := constr:(_ : TT t) in notypeclasses refine (ext (ty:=ty) f) : typeclass_instances.
 
 Typeclasses Opaque ext.
 
@@ -82,7 +82,7 @@ Qed.
 Instance reg_is_ext ty (R : registered ty) (x : ty) : computable x.
 Proof.
   exists (enc x). reflexivity.
-Defined.
+Defined. (* because ? *)
 
 
 Lemma computesTyB (t:Type) (x:t) `{registered t}: computes (TyB t) x (ext x).
@@ -97,7 +97,7 @@ Proof.
   edestruct H as (?&?&?).
   eassumption.
   now eapply (@Build_computable _ _ _ x0). 
-Defined.  
+Defined. (* because ? *)
 
 Lemma extApp t1 t2 {tt1:TT t1} {tt2 : TT t2} (f: t1 -> t2) (x:t1) (Hf : computable f) (Hx : computable x) :
   app (ext f) (ext x) >* ext (f x).
@@ -112,7 +112,7 @@ Lemma ext_is_enc t1 (R:registered t1) (x: t1) (Hf : computable x) :
   @ext _ _ x Hf = enc x.
 Proof.
   now destruct Hf. 
-Defined.
+Defined. (* because ? *)
 
 Definition computesExp {t} (ty : TT t) (f:t) (s fExt : term) : Type :=
   eval s fExt * computes ty f fExt.
@@ -158,7 +158,7 @@ Qed.
 Fixpoint extEq t {tt:TT t} : t -> t -> Prop:=
   match tt with
     TyB _ _ => eq
-  | @TyArr t1 t2 tt1 tt2 => fun f f' => forall (x : t1), extEq (f x) (f' x)
+  | @TyArr t1 t2 _ _ => fun f f' => forall (x : t1), extEq (f x) (f' x)
   end.
 
 
@@ -185,8 +185,9 @@ Qed.
 
 Lemma computableExt X (tt : TT X) (x x' : X):
   extEq x x' -> computable x -> computable x'.
+Proof.
   intros ? (s&?). exists s. eauto using computesExt.
-Defined.
+Defined. (* because ? *)
 
 (* register a datatype via an (injectve) function to another, e.g. vectors as lists *)
 
@@ -194,7 +195,7 @@ Lemma registerAs X Y `{registered X} (f:Y -> X) : injective f -> registered Y.
 Proof.
   intros Hf. eexists (fun x => enc (f x)). now destruct H.
   intros ? ? ?. now eapply H, Hf in H0.
-Defined.
+Defined. (* because ? *)
 Arguments registerAs {_ _ _} _ _.
 
 (* Support for extracting registerAs-ed functions *)

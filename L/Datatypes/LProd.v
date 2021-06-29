@@ -1,10 +1,10 @@
-From Undecidability.L Require Export L Tactics.LTactics GenEncode.
+From Computability.L Require Export L Tactics.LTactics GenEncode.
 
-From Undecidability.L.Datatypes Require Import LBool.
+From Computability.L.Datatypes Require Import LBool.
 
-From Undecidability.L Require Import Functions.EqBool GenEncode.
+From Computability.L Require Import Functions.EqBool GenEncode.
 (*
-From Undecidability.L Require Import LNat.*)
+From Computability.L Require Import LNat.*)
 
 (* ** Encoding of pairs *)
 
@@ -22,17 +22,17 @@ Section Fix_XY.
   Global Instance term_pair : computableTime' (@pair X Y) (fun _ _ => (1,fun _ _ => (1,tt))).
   Proof.
     extract constructor. solverec. 
-  Defined.
+  Qed.
 
   Global Instance term_fst : computableTime' (@fst X Y) (fun _ _ => (5,tt)).
   Proof.
     extract. solverec.
-  Defined.
+  Qed.
 
   Global Instance term_snd : computableTime' (@snd X Y) (fun _ _ => (5,tt)).
   Proof.
     extract. solverec.
-  Defined.
+  Qed.
 
   Definition prod_eqb f g (a b: X*Y):=
     let (x1,y1):= a in
@@ -84,13 +84,13 @@ Section Fix_XY.
                                            k2 +fst (eqT2' (snd y) tt)) + 14, tt))))).
   Proof.
     extract. solverec. 
-  Defined.
+  Qed.
 
   Global Instance term_prod_eqb_notime :
     computable prod_eqb.
   Proof.
     extract. 
-  Defined. *)
+  Qed. *)
 
   
   Lemma size_prod (w:X*Y):
@@ -102,4 +102,4 @@ Section Fix_XY.
   
 End Fix_XY.
 
-Hint Resolve prod_enc_correct : Lrewrite.
+#[export] Hint Resolve prod_enc_correct : Lrewrite.

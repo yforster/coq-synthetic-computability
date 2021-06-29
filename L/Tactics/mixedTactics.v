@@ -1,4 +1,4 @@
-Require Import Undecidability.Shared.Libs.PSL.Base Lia Ring. 
+Require Import Computability.Shared.Libs.PSL.Base Lia Ring. 
 
 Tactic Notation "destruct" "_":= 
   match goal with
@@ -27,3 +27,6 @@ Require Export ZArith.
 Ltac leq_crossout :=
        try zify;try apply Zle_0_minus_le; ring_simplify;
        repeat eapply Z.add_nonneg_nonneg;try now (repeat eapply Z.mul_nonneg_nonneg;easy).
+
+Tactic Notation (at level 3) "repeat'" tactic3(t) :=
+  let rec loop := (once t);try loop in loop.
