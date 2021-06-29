@@ -1,7 +1,7 @@
-From Computability Require Import DecidabilityFacts EnumerabilityFacts SemiDecidabilityFacts ListEnumerabilityFacts Axioms.axioms embed_nat reductions partial.
+From Undecidability Require Import DecidabilityFacts EnumerabilityFacts SemiDecidabilityFacts ListEnumerabilityFacts Axioms.axioms embed_nat reductions partial.
 Require Import ssreflect.
 
-Require Import Computability.Synthetic.EnumerabilityFacts.
+Require Import Undecidability.Synthetic.EnumerabilityFacts.
 
 (** * Halting problems  *)
 

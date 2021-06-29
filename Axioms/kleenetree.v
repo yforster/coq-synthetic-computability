@@ -1,9 +1,9 @@
 Set Implicit Arguments.
 Unset Strict Implicit.
 Require Import stdpp.list stdpp.list_numbers.
-From Computability Require Import Synthetic.DecidabilityFacts Synthetic.SemiDecidabilityFacts Synthetic.EnumerabilityFacts reductions partial Axioms.axioms  principles Shared.Dec.
+From Undecidability Require Import Synthetic.DecidabilityFacts Synthetic.SemiDecidabilityFacts Synthetic.EnumerabilityFacts reductions partial Axioms.axioms  principles Shared.Dec.
 Require Import ssreflect Nat.
-Require Import Computability.Shared.FilterFacts.
+Require Import Undecidability.Shared.FilterFacts.
 
 Section Reverse_Induction.
 

@@ -1,6 +1,6 @@
-From Computability.L.Tactics Require Import LTactics.
-From Computability.L Require Import UpToC.
-From Computability.L.Datatypes Require Export List_enc LBool.
+From Undecidability.L.Tactics Require Import LTactics.
+From Undecidability.L Require Import UpToC.
+From Undecidability.L.Datatypes Require Export List_enc LBool.
 
 Set Default Proof Using "Type".
 

@@ -1,10 +1,10 @@
 From stdpp Require Import list.
 
-From Computability Require Import reductions ReducibilityFacts EnumerabilityFacts Synthetic.Definitions DecidabilityFacts truthtables principles Dec.
-Require Import Computability.Shared.partial.
+From Undecidability Require Import reductions ReducibilityFacts EnumerabilityFacts Synthetic.Definitions DecidabilityFacts truthtables principles Dec.
+Require Import Undecidability.Shared.partial.
 Require Import Setoid Morphisms.
 
-From Computability Require Import Pigeonhole.
+From Undecidability Require Import Pigeonhole.
 
 Axiom FunExt : forall (X : Type) (Y : X -> Type) (f g : forall x : X, Y x), (forall x, f x = g x) -> f = g.
 Axiom PropExt : forall P1 P2 : Prop, P1 <-> P2 -> P1 = P2.
@@ -1403,7 +1403,7 @@ Proof.
   - cbn in H. now rewrite of_o_char, <- H, to_o_char.
 Qed.
 
-From Computability Require Import hypersimple_construction.
+From Undecidability Require Import hypersimple_construction.
 
 Lemma non_finite_to {p : nat -> Prop} (f : nat -> nat) :
   Inj (=) (=) f ->

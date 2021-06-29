@@ -1,6 +1,6 @@
-From Computability.L Require Import Util.L_facts Prelim.StringBase.
+From Undecidability.L Require Import Util.L_facts Prelim.StringBase.
 From MetaCoq Require Import Template.All Template.Checker.
-Require Import Computability.Shared.Libs.PSL.Base. 
+Require Import Undecidability.Shared.Libs.PSL.Base. 
 Require Import String Ascii.
 
 Open Scope string_scope.
@@ -176,7 +176,7 @@ Class encodable (A : Type) := enc_f : A -> L.term.
 
 MetaCoq Quote Definition tTerm := L.term.
 
-Definition term_mp := MPfile ["L"; "L"; "Computability"].
+Definition term_mp := MPfile ["L"; "L"; "Undecidability"].
 Definition term_kn := (term_mp, "term").
 
 Definition mkLam x := tApp (tConstruct (mkInd term_kn 0) 2 []) [x].

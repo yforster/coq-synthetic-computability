@@ -6,7 +6,7 @@
  *)
 
 Require Export Bool Omega Lia List Setoid Morphisms.
-From Computability.Shared.Libs.PSL Require Export Tactics.
+From Undecidability.Shared.Libs.PSL Require Export Tactics.
 
 Global Set Implicit Arguments. 
 Global Unset Strict Implicit.

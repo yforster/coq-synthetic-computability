@@ -1,5 +1,5 @@
-From Computability.Synthetic Require Import DecidabilityFacts EnumerabilityFacts ListEnumerabilityFacts MoreEnumerabilityFacts reductions.
-From Computability.Shared Require Import ListAutomation.
+From Undecidability.Synthetic Require Import DecidabilityFacts EnumerabilityFacts ListEnumerabilityFacts MoreEnumerabilityFacts reductions.
+From Undecidability.Shared Require Import ListAutomation.
 Require Import List Lia.
 Import ListNotations ListAutomationNotations.
 

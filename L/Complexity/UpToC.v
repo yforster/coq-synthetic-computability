@@ -1,4 +1,4 @@
-From Computability Require Import L.Prelim.MoreBase.
+From Undecidability Require Import L.Prelim.MoreBase.
 
 Require Import smpl.Smpl.
 Require Export Lia Arith Ring.
@@ -6,7 +6,7 @@ Require Export Lia Arith Ring.
 From Coq Require Import Setoid.
 From Coq Require Import CRelationClasses CMorphisms.
 Import CMorphisms.ProperNotations. 
-From Computability.Shared.Libs.PSL Require FinTypes.
+From Undecidability.Shared.Libs.PSL Require FinTypes.
 
 Record leUpToC {X} (f g : X -> nat) : Type :=
   { c__leUpToC : nat;

@@ -1,4 +1,4 @@
-From Computability.L.Tactics Require Import LTactics GenEncode.
+From Undecidability.L.Tactics Require Import LTactics GenEncode.
 
 (* ** Encoding of lists *)
 Set Default Proof Using "Type".

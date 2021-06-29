@@ -6,14 +6,14 @@
     (1) Saarland University, Saarbrücken, Germany
 *)
 
-Require Export Computability.Axioms.EA.
-Require Export Computability.Shared.Pigeonhole.
-Require Export Computability.Synthetic.FinitenessFacts.
-Require Export Computability.Synthetic.reductions Computability.Synthetic.truthtables.
-Require Export Computability.Synthetic.DecidabilityFacts Computability.Synthetic.EnumerabilityFacts Computability.Synthetic.SemiDecidabilityFacts.
-Require Export Computability.Shared.ListAutomation.
-Require Export Computability.Synthetic.simple.
-Require Export Computability.Shared.embed_nat.
+Require Export Undecidability.Axioms.EA.
+Require Export Undecidability.Shared.Pigeonhole.
+Require Export Undecidability.Synthetic.FinitenessFacts.
+Require Export Undecidability.Synthetic.reductions Undecidability.Synthetic.truthtables.
+Require Export Undecidability.Synthetic.DecidabilityFacts Undecidability.Synthetic.EnumerabilityFacts Undecidability.Synthetic.SemiDecidabilityFacts.
+Require Export Undecidability.Shared.ListAutomation.
+Require Export Undecidability.Synthetic.simple.
+Require Export Undecidability.Shared.embed_nat.
 Require Export List Arith.
 
 Export EmbedNatNotations.

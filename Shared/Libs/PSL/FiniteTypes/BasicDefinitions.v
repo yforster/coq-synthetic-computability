@@ -2,7 +2,7 @@
 - includes basic Lemmas about said functions 
  *)
 
-From Computability.Shared.Libs.PSL Require Export Base.
+From Undecidability.Shared.Libs.PSL Require Export Base.
 
 (* * Definition of useful tactics *)
 

@@ -6,8 +6,8 @@
     (1) Saarland University, Saarbrücken, Germany
 *)
 
-From Computability.Synthetic Require Import DecidabilityFacts EnumerabilityFacts ListEnumerabilityFacts.
-From Computability.Shared Require Import ListAutomation Dec.
+From Undecidability.Synthetic Require Import DecidabilityFacts EnumerabilityFacts ListEnumerabilityFacts.
+From Undecidability.Shared Require Import ListAutomation Dec.
 Require Import List Lia.
 Import ListNotations ListAutomationNotations.
 
@@ -94,7 +94,7 @@ Qed.
 
 
 Require Import ConstructiveEpsilon.
-From Computability Require Import Shared.ListAutomation Shared.mu_nat.
+From Undecidability Require Import Shared.ListAutomation Shared.mu_nat.
 
 
 Import ListAutomationNotations.

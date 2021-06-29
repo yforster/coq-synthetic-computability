@@ -1,9 +1,9 @@
 From stdpp Require Import prelude.
 Require Import ssreflect.
 
-From Computability.Synthetic Require Import Definitions DecidabilityFacts EnumerabilityFacts.
-From Computability.Shared Require Import Dec.
-From Computability.Synthetic Require Import reductions.
+From Undecidability.Synthetic Require Import Definitions DecidabilityFacts EnumerabilityFacts.
+From Undecidability.Shared Require Import Dec.
+From Undecidability.Synthetic Require Import reductions.
 
 Require Import Equations.Prop.Subterm Equations.Prop.DepElim.
 From Equations Require Import Equations.

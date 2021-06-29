@@ -1,6 +1,6 @@
-From Computability.Synthetic Require Import DecidabilityFacts EnumerabilityFacts ListEnumerabilityFacts ReducibilityFacts.
-From Computability.L Require Import Computability.MuRec.
-From Computability.L.Datatypes Require Import LNat LOptions LProd Lists.
+From Undecidability.Synthetic Require Import DecidabilityFacts EnumerabilityFacts ListEnumerabilityFacts ReducibilityFacts.
+From Undecidability.L Require Import Computability.MuRec.
+From Undecidability.L.Datatypes Require Import LNat LOptions LProd Lists.
 
 Require Import Datatypes.
 
@@ -96,7 +96,7 @@ Qed.
 (*   extract. *)
 (* Qed. *)
 
-Require Import Computability.Shared.embed_nat Nat.
+Require Import Undecidability.Shared.embed_nat Nat.
 
 (* Instance term_nat_rec {X : Set} `{registered X} : computable (@nat_rec (fun _ => X)). *)
 (* Proof. *)

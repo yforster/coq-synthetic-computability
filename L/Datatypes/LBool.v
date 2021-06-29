@@ -1,5 +1,5 @@
-From Computability.L Require Export Util.L_facts.
-From Computability.L.Tactics Require Import LTactics GenEncode.
+From Undecidability.L Require Export Util.L_facts.
+From Undecidability.L.Tactics Require Import LTactics GenEncode.
 (* ** Encoding of booleans *)
 
 (* Definition bool_enc (b:bool) : term:= *)

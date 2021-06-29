@@ -1,4 +1,4 @@
-From Computability.L Require Import Tactics.Computable Lproc Lbeta ComputableTime mixedTactics.
+From Undecidability.L Require Import Tactics.Computable Lproc Lbeta ComputableTime mixedTactics.
 Import L_Notations.
 
 (* *** Lrewrite: simplification with correctness statements*)
@@ -118,7 +118,7 @@ Ltac LrewriteTime_solveGoals :=
   try find_Lrewrite_lemma;
   try useFixHypo;
   once lazymatch goal with
-    (* Computability: *)
+    (* Undecidability: *)
   | |- @ext _ (@TyB _ _)  _ ?inted >* _ =>
     (progress rewrite (ext_is_enc);[>LrewriteTime_solveGoals..]) || Lreflexivity
   | |- app (@ext _ (_ ~> _ ) _ _) (ext _) >* _ => etransitivity;[apply extApp|LrewriteTime_solveGoals]

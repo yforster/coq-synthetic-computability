@@ -1,4 +1,4 @@
-From Computability.L Require Import L Tactics.Computable Tactics.ComputableTactics Tactics.Extract.
+From Undecidability.L Require Import L Tactics.Computable Tactics.ComputableTactics Tactics.Extract.
 From MetaCoq Require Import Template.All TemplateMonad.Core Template.Ast.
 Require Import String List.
 Export String.StringSyntax.
@@ -34,7 +34,7 @@ Definition mkMatch (t1 t2 d : Ast.term) (cases : nat -> list term -> Core.Templa
   ret (tCase ((ind, params), Relevant) (tLambda naAnon t1 t2) d
              body).
 
-Definition L_facts_mp := MPfile ["L_facts"; "Util"; "L"; "Computability"].
+Definition L_facts_mp := MPfile ["L_facts"; "Util"; "L"; "Undecidability"].
 
 Definition tmMatchCorrect (A : Type) : Core.TemplateMonad Prop :=
   t <- (tmEval hnf A >>= tmQuote) ;; 

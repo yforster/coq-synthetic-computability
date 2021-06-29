@@ -1,9 +1,9 @@
-From Computability.L.Complexity Require Export UpToC GenericNary.
+From Undecidability.L.Complexity Require Export UpToC GenericNary.
 
 Require Import smpl.Smpl.
 From Coq Require Import Setoid.
 From Coq Require Import CRelationClasses CMorphisms.
-From Computability.Shared.Libs.PSL Require FinTypes.
+From Undecidability.Shared.Libs.PSL Require FinTypes.
 
 Local Set Universe Polymorphism. 
 

@@ -1,9 +1,9 @@
 From stdpp Require Import prelude.
 Require Import ssreflect.
 
-From Computability.Synthetic Require Import Definitions DecidabilityFacts EnumerabilityFacts ListEnumerabilityFacts MoreEnumerabilityFacts FinitenessFacts.
-From Computability.Synthetic Require Import truthtables.
-From Computability.Shared Require Import Dec.
+From Undecidability.Synthetic Require Import Definitions DecidabilityFacts EnumerabilityFacts ListEnumerabilityFacts MoreEnumerabilityFacts FinitenessFacts.
+From Undecidability.Synthetic Require Import truthtables.
+From Undecidability.Shared Require Import Dec.
 
 Ltac inv H := inversion H; subst; clear H.
 Definition LEM := forall P, P \/ ~ P.

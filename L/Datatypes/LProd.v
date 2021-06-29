@@ -1,10 +1,10 @@
-From Computability.L Require Export L Tactics.LTactics GenEncode.
+From Undecidability.L Require Export L Tactics.LTactics GenEncode.
 
-From Computability.L.Datatypes Require Import LBool.
+From Undecidability.L.Datatypes Require Import LBool.
 
-From Computability.L Require Import Functions.EqBool GenEncode.
+From Undecidability.L Require Import Functions.EqBool GenEncode.
 (*
-From Computability.L Require Import LNat.*)
+From Undecidability.L Require Import LNat.*)
 
 (* ** Encoding of pairs *)
 

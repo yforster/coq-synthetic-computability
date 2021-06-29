@@ -1,4 +1,4 @@
-From Computability Require Import Synthetic.DecidabilityFacts Synthetic.EnumerabilityFacts Synthetic.SemiDecidabilityFacts reductions partial embed_nat.
+From Undecidability Require Import Synthetic.DecidabilityFacts Synthetic.EnumerabilityFacts Synthetic.SemiDecidabilityFacts reductions partial embed_nat.
 Require Import Setoid Program Lia.
 
 Lemma sec_enum (p : nat -> Prop) : semi_decidable p <-> enumerable p.
@@ -590,7 +590,7 @@ Qed.
 (*       eexists ⟨_,_⟩. now rewrite embedP, H1, !embedP, PeanoNat.Nat.eqb_refl. *)
 (* Qed. *)
 
-Require Import Computability.Synthetic.ReducibilityFacts.
+Require Import Undecidability.Synthetic.ReducibilityFacts.
 
 Fixpoint mk_mono {X} (f : nat -> option X) (n : nat) : option X :=
   match n with

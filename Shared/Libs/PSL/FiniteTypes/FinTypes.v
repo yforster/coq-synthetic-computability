@@ -1,5 +1,5 @@
-From Computability.Shared.Libs.PSL Require Export BasicDefinitions.
-From Computability.Shared.Libs.PSL Require Import Bijection.
+From Undecidability.Shared.Libs.PSL Require Export BasicDefinitions.
+From Undecidability.Shared.Libs.PSL Require Import Bijection.
 
 (* ** Formalisation of finite types using canonical structures and type classes *)
 

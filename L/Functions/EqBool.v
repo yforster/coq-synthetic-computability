@@ -1,5 +1,5 @@
-From Computability.L Require Import L Tactics.LTactics LBool.
-(*From Computability.L.Complexity Require Import Monotonic UpToC.*)
+From Undecidability.L Require Import L Tactics.LTactics LBool.
+(*From Undecidability.L.Complexity Require Import Monotonic UpToC.*)
 
 
 Class eqbClass X (eqb : X -> X -> bool): Type := 

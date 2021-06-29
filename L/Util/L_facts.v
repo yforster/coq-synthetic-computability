@@ -1,6 +1,6 @@
-From Computability.L Require Export Prelim.ARS Prelim.MoreBase.
-From Computability.Shared.Libs.PSL Require Export Base Bijection.
-From Computability.L Require Export L.
+From Undecidability.L Require Export Prelim.ARS Prelim.MoreBase.
+From Undecidability.Shared.Libs.PSL Require Export Base Bijection.
+From Undecidability.L Require Export L.
 
 Require Import Lia.
 

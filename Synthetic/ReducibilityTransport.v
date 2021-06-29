@@ -1,4 +1,4 @@
-From Computability Require Import DecidabilityFacts SemiDecidabilityFacts EnumerabilityFacts ListEnumerabilityFacts reductions.
+From Undecidability Require Import DecidabilityFacts SemiDecidabilityFacts EnumerabilityFacts ListEnumerabilityFacts reductions.
 
 Lemma semidecidable_red X Y (p : X -> Prop) (q : Y -> Prop) :
   p ⪯ₘ q -> semi_decidable q -> semi_decidable p.

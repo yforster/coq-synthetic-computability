@@ -1,11 +1,11 @@
-Require Import Computability.L.Datatypes.LNat.
-Require Import Computability.L.Datatypes.List.List_in Computability.L.Datatypes.List.List_basics.
-Require Import Computability.L.Functions.Unenc.
-Require Import Computability.Shared.ListAutomation.
-Require Import Computability.Shared.embed_nat.
+Require Import Undecidability.L.Datatypes.LNat.
+Require Import Undecidability.L.Datatypes.List.List_in Undecidability.L.Datatypes.List.List_basics.
+Require Import Undecidability.L.Functions.Unenc.
+Require Import Undecidability.Shared.ListAutomation.
+Require Import Undecidability.Shared.embed_nat.
 
-Require Import Computability.L.Datatypes.List.List_extra Computability.L.Datatypes.LProd.
-Require Import Computability.L.Datatypes.LTerm Computability.L.Functions.Eval.
+Require Import Undecidability.L.Datatypes.List.List_extra Undecidability.L.Datatypes.LProd.
+Require Import Undecidability.L.Datatypes.LTerm Undecidability.L.Functions.Eval.
 
 Import ListNotations ListAutomationNotations EmbedNatNotations.
 
@@ -108,10 +108,10 @@ Definition T_L (c : nat) (x : nat) (n : nat) :=
 (*   extract. *)
 (* Qed. *)
 
-Require Import Computability.Axioms.bestaxioms.
-Require Import Computability.L.Util.L_facts Computability.L.Computability.Seval.
-Require Import Computability.Synthetic.ListEnumerabilityFacts Computability.Synthetic.EnumerabilityFacts Computability.Synthetic.DecidabilityFacts.
-Require Import Computability.Shared.ListAutomation Computability.Shared.Dec.
+Require Import Undecidability.Axioms.bestaxioms.
+Require Import Undecidability.L.Util.L_facts Undecidability.L.Computability.Seval.
+Require Import Undecidability.Synthetic.ListEnumerabilityFacts Undecidability.Synthetic.EnumerabilityFacts Undecidability.Synthetic.DecidabilityFacts.
+Require Import Undecidability.Shared.ListAutomation Undecidability.Shared.Dec.
 
 Lemma list_enumerator_term_correct : list_enumeratorᵗ list_enumerator_term term.
 Proof with (try eapply cum_ge'; eauto; lia).
@@ -183,7 +183,7 @@ Qed.
 
 Definition CT_L := CT T_L.
 
-From Computability.L Require Import Synthetic.
+From Undecidability.L Require Import Synthetic.
 
 Definition CT_L_elem :=
   forall f : nat -> nat, exists t : term, closed t /\ forall n, L.eval (L.app t (enc n)) (enc (f n)).
@@ -335,7 +335,7 @@ Proof.
   - intros [n [= <-]]. eauto.
 Qed.
 
-Require Import Computability.L.Computability.MuRec.
+Require Import Undecidability.L.Computability.MuRec.
 
 Lemma CT_L_enumerable_to_CT_L_elem :
   CT_L_enumerable -> CT_L_elem.
@@ -485,7 +485,7 @@ Proof.
     now rewrite H2, Hg.
 Qed.
 
-From Computability Require Import principles.
+From Undecidability Require Import principles.
 
 Lemma CT_L_MP_equiv :
   CT_L ->
@@ -500,7 +500,7 @@ Proof.
     + eapply (H2 0). eapply He. now rewrite <- H2.
 Qed.
 
-From Computability Require Import reductions.
+From Undecidability Require Import reductions.
 
 Lemma CT_L_enumerable_equiv :
   CT_L -> forall p : nat -> Prop, enumerable p <-> p ⪯ₘ HaltL.
@@ -687,7 +687,7 @@ Qed.
 
 (* Print Assumptions SMN'. *)
 
-(* Require Import Computability.Synthetic.truthtables. *)
+(* Require Import Undecidability.Synthetic.truthtables. *)
 
 (* Lemma bla {X} f  : decider f (fun x : X => f x = true). *)
 (* Proof. *)

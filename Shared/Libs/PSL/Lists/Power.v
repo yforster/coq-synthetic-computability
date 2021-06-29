@@ -1,4 +1,4 @@
-From Computability.Shared.Libs.PSL Require Import BaseLists Dupfree.
+From Undecidability.Shared.Libs.PSL Require Import BaseLists Dupfree.
 
 (* *** Power lists *)
 

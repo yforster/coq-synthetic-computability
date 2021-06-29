@@ -1,4 +1,4 @@
-Require Import Computability.Synthetic.DecidabilityFacts Computability.Synthetic.EnumerabilityFacts Computability.Shared.partial Computability.Shared.embed_nat Computability.Synthetic.FinitenessFacts.
+Require Import Undecidability.Synthetic.DecidabilityFacts Undecidability.Synthetic.EnumerabilityFacts Undecidability.Shared.partial Undecidability.Shared.embed_nat Undecidability.Synthetic.FinitenessFacts.
 Require Import List Lia.
 Export EmbedNatNotations.
 

@@ -1,7 +1,7 @@
-From Computability.L.Tactics Require Import LTactics.
-From Computability.L Require Import UpToC.
-From Computability.L.Datatypes Require Export List.List_enc LBool LNat.
-From Computability.Shared.Libs.PSL.Lists Require Export Filter.
+From Undecidability.L.Tactics Require Import LTactics.
+From Undecidability.L Require Import UpToC.
+From Undecidability.L.Datatypes Require Export List.List_enc LBool LNat.
+From Undecidability.Shared.Libs.PSL.Lists Require Export Filter.
 
 Set Default Proof Using "Type".
 

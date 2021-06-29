@@ -1,4 +1,4 @@
-From Computability.Shared.Libs.PSL Require Export BaseLists Dupfree.
+From Undecidability.Shared.Libs.PSL Require Export BaseLists Dupfree.
 
 Definition elAt := nth_error.
 Notation "A '.[' i  ']'" := (elAt A i) (no associativity, at level 50).

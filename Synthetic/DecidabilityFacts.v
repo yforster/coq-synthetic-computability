@@ -1,7 +1,7 @@
-Require Computability.Shared.Dec.
+Require Undecidability.Shared.Dec.
 Require Import Setoid Morphisms.
-Require Export Computability.Synthetic.Definitions Computability.Synthetic.FinitenessFacts.
-From Computability.Shared Require Import mu_nat equiv_on.
+Require Export Undecidability.Synthetic.Definitions Undecidability.Synthetic.FinitenessFacts.
+From Undecidability.Shared Require Import mu_nat equiv_on.
 
 (** Facts on reflects *)
 

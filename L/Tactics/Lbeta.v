@@ -1,6 +1,6 @@
-From Computability.L Require Import Util.L_facts.
+From Undecidability.L Require Import Util.L_facts.
 Require Import ListTactics.
-From Computability.L.Tactics Require Import Lproc Reflection. 
+From Undecidability.L.Tactics Require Import Lproc Reflection. 
 
 (* *** Lbeta: symbolic beta reduction *)
 

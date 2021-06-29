@@ -1,5 +1,5 @@
-From Computability.Synthetic Require Import DecidabilityFacts.
-From Computability.Shared Require Export embed_nat equiv_on partial mu_nat.
+From Undecidability.Synthetic Require Import DecidabilityFacts.
+From Undecidability.Shared Require Export embed_nat equiv_on partial mu_nat.
 Require Import List Morphisms Lia.
 Export EmbedNatNotations.
 
@@ -445,7 +445,7 @@ Proof.
       * exists x. inversion H0. subst. eauto.
 Qed.
 (* 
-Require Import Computability.Shared.Dec Computability.Shared.Pigeonhole.
+Require Import Undecidability.Shared.Dec Undecidability.Shared.Pigeonhole.
 
 Section dedekind_infinite.
 

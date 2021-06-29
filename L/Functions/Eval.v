@@ -1,4 +1,4 @@
-From Computability.L Require Export Functions.Subst Computability.Seval Computability.MuRec Datatypes.LOptions Datatypes.LTerm.
+From Undecidability.L Require Export Functions.Subst Computability.Seval Computability.MuRec Datatypes.LOptions Datatypes.LTerm.
 
 (* ** Extracted step-indexed L-interpreter *)
 
@@ -7,7 +7,7 @@ Proof.
   extract.
 Qed.
 
-(* ** Computability of full evaluation *)
+(* ** Undecidability of full evaluation *)
 
 Definition doesHaltIn := fun u n => match eva n u with None => false | _ => true end.
 
