@@ -290,12 +290,6 @@ Local Notation "( a ,, b )" := (existT a b).
 Local Notation "( a ).1" := (projT1 a).
 Local Notation "( a ).2" := (projT2 a).
 
-Axiom PropExt : forall P1 P2 : Prop, P1 <-> P2 -> P1 = P2.
-Fact PropExt' : forall P1 P2 : Prop, P1 <-> P2 <-> P1 = P2.
-Proof.
-  split. eapply PropExt. now intros ->.
-Qed.
-
 Instance red_tt_reflexive {X} : Reflexive (@red_tt X X).
 Proof.
   move => p.

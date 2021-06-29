@@ -1,8 +1,37 @@
+Require Import List Morphisms Lia.
 Require Import Undecidability.Synthetic.DecidabilityFacts Undecidability.Synthetic.EnumerabilityFacts Undecidability.Shared.partial Undecidability.Shared.embed_nat Undecidability.Synthetic.FinitenessFacts.
-Require Import List Lia.
 Export EmbedNatNotations.
 
 (** ** Semi-decidability  *)
+
+Definition equiv_sdec {X} := fun (f g : X -> nat -> bool) => forall x, (exists n, f x n = true) <-> exists n, g x n = true.
+
+Instance Proper_semi_decider {X} :
+  Proper (@equiv_sdec X ==> pointwise_relation X iff ==> iff ) (@semi_decider X).
+Proof.
+  intros f g H1 p q H2. red in H1, H2.
+  unfold semi_decider. 
+  split; intros H x; cbn in H1.
+  - now rewrite <- H2, H, H1.
+  - now rewrite H2, H, H1.
+Qed.
+
+Instance Proper_semi_decidable {X} :
+  Proper (pointwise_relation X iff ==> iff) (@semi_decidable X).
+Proof.
+  intros p q H2.
+  split; intros [f H]; exists f; red.
+  - intros x. now rewrite <- (H2 x).
+  - intros x. now rewrite H2.
+Qed.
+
+Lemma semi_decider_ext {X} {p q : X -> Prop} {f g} :
+  semi_decider f p -> semi_decider g q -> equiv_sdec f g -> p ≡{_} q.
+Proof.
+  unfold semi_decider. cbn.
+  intros Hp Hq E x. red in E.
+  now rewrite Hp, E, Hq.
+Qed. 
 
 Lemma semi_decidable_part_iff {X} {p : X -> Prop} {Part : partiality}:
   semi_decidable p <-> exists Y (f : X -> part Y), forall x, p x <-> exists y, f x =! y.

@@ -38,6 +38,15 @@ Proof.
   - eapply Hf. intros x. rewrite c_spec. eapply Hl.
 Qed.
 
+Lemma productive_subpredicate p :
+  productive p ->
+  exists q : nat -> Prop, enumerable q /\ dedekind_infinite q /\ (forall x, q x -> p x).
+Proof.
+  intros H.
+  eapply dedekind_infinite_problem.
+  eapply productive_dedekind_infinite. eauto.
+Qed.
+
 Lemma productive_red p q :
   p ⪯ₘ q -> productive p -> productive q.
 Proof. 
@@ -54,9 +63,7 @@ Lemma many_one_complete_subpredicate p :
   m-complete p ->
   exists q : nat -> Prop, enumerable q /\ dedekind_infinite q /\ (forall x, q x -> compl p x).
 Proof.
-  intros Hcomp.
-  eapply dedekind_infinite_problem.
-  eapply productive_dedekind_infinite.
+  intros Hcomp. eapply productive_subpredicate.
   eapply productive_red.
   - eapply red_m_complement. eapply Hcomp. eapply K0_enum.
   - eapply K0_productive. 
