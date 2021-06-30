@@ -143,10 +143,10 @@ Proof.
 Qed.
 
 Lemma finite_intersection {X} {p q : X -> Prop} :
-  listable p -> ~~ listable (fun x => p x /\ q x).
+  listable p -> exhaustible (fun x => p x /\ q x).
 Proof.
   intros H.
-  eapply exhaustible_listable, subfinite_intersection, listable_exhaustible, H.
+  eapply subfinite_intersection, listable_exhaustible, H.
 Qed.
 
 Lemma finite_disjunction {X} {p q : X -> Prop} :
@@ -154,6 +154,108 @@ Lemma finite_disjunction {X} {p q : X -> Prop} :
 Proof.
   intros [l1 H1] [l2 H2]. exists (l1 ++ l2).
   intros x. red in H1, H2. now rewrite H1, H2, in_app_iff.
+Qed.
+
+(** ** Finite types *)
+
+Definition finiteᵗ X := exists l, forall x : X, In x l.
+
+Fact finite_t_equiv1 X : 
+  finiteᵗ X -> exhaustible (fun x : X => True).
+Proof.
+  firstorder.
+Qed.
+
+Fact finite_t_equiv2 X :
+  exhaustible (fun x : X => True) -> listable (fun x : X => True).
+Proof.
+  firstorder.
+Qed.
+
+Fact finite_t_equiv3 X :
+  listable (fun x : X => True) -> finiteᵗ X.
+Proof.
+  firstorder.
+Qed.
+
+Fact unit_listed :
+  forall x : unit, In x [tt].
+Proof.
+  intros []; firstorder.
+Qed.
+
+Fact bool_listed :
+  forall x : bool, In x [true; false].
+Proof.
+  intros []; firstorder.
+Qed.
+
+Fact Fin_listed n :
+  ∑ l, forall x : Fin.t n, In x l.
+Proof.
+  induction n as [ | n [l IH]].
+  - exists []. intros x. inversion x.
+  - exists (Fin.F1 :: map Fin.FS l).
+    intros x. apply (Fin.caseS' x).
+    + firstorder.
+    + right. eapply in_map_iff. eauto.
+Qed.
+
+Fact finite_unit : finiteᵗ unit.
+Proof.
+  eexists. eapply unit_listed.
+Qed.
+
+Fact finite_bool : finiteᵗ bool.
+Proof.
+  eexists. eapply bool_listed.
+Qed.
+
+Fact finite_Fin n : finiteᵗ (Fin.t n).
+Proof.
+  destruct (Fin_listed n) as [l Hl]. 
+  firstorder.
+Qed.
+
+Fact finite_sum X Y : 
+  finiteᵗ X -> finiteᵗ Y -> finiteᵗ (X + Y).
+Proof.
+  intros [l1 H1] [l2 H2].
+  exists (map inl l1 ++ map inr l2).
+  intros [x | y]; rewrite in_app_iff, !in_map_iff; eauto.
+Qed.
+
+Fact finite_prod X Y : 
+  finiteᵗ X -> finiteᵗ Y -> finiteᵗ (X * Y).
+Proof.
+  intros [l1 H1] [l2 H2].
+  exists (list_prod l1 l2).
+  intros [x y]; rewrite in_prod_iff; eauto.
+Qed.
+
+Fact finite_option X : 
+  finiteᵗ X -> finiteᵗ (option X).
+Proof.
+  intros [l H].
+  exists (None :: map Some l).
+  intros [ | ]; cbn; rewrite in_map_iff; eauto.
+Qed.
+
+Fact finite_vector X n : 
+  finiteᵗ X -> finiteᵗ (Vector.t X n).
+Proof.
+  intros [l H]. induction n as [ | n [l' IH]].
+  - exists [Vector.nil X]. 
+    now eapply Vector.case0.
+  - exists (map (fun '(x, v) => Vector.cons _ x _ v) (list_prod l l')).
+    intros v. eapply (Vector.caseS' v). clear v. intros x v.
+    eapply in_map_iff. exists (x, v). rewrite in_prod_iff. eauto.
+Qed.
+
+Fact finite_comprehension X :
+  finiteᵗ X -> forall p : X -> Prop, exhaustible p.
+Proof.
+  firstorder.
 Qed.
 
 (** ** Infinite types and predicates  *)
@@ -385,7 +487,7 @@ Lemma non_finite_unbounded_DNE :
   (forall (p : nat -> Prop), ~ exhaustible p -> unbounded p) -> DNE.
 Proof.
   intros H P HP.
-  unshelve epose proof (unbounded_inhabited (fun _ : nat => P) _) as []; [ | eassumption].
+  unshelve epose proof (@unbounded_inhabited _ (fun _ : nat => P) _) as []; [ | eassumption].
   eapply H. intros Hf. ccase P as [H1 | H1]; try tauto.
   eapply generative_non_exhaustible. 2: exact Hf.
   eapply generative_ext. 

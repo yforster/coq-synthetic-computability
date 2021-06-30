@@ -13,7 +13,7 @@ clean: Makefile.coq
 
 mkCoqProject: _CoqProject.in
 	yes | cp _CoqProject.in _CoqProject
-	find . -name '*.v' | sed "s/\.\///g" >> _CoqProject
+	git ls-files "*.v" >> _CoqProject
 
 Makefile.coq: mkCoqProject
 	coq_makefile -f _CoqProject -o Makefile.coq
@@ -23,4 +23,7 @@ force Makefile _CoqProject.in: ;
 %: Makefile.coq force
 	@+$(MAKE) -f Makefile.coq $@
 
-.PHONY: all html clean force mkCoqProject
+.PHONY: all html clean force mkCoqProject deploy
+
+deploy:
+	rsync -r website/ forster@alfred.ps.uni-saarland.de:~/public_html/thesis/synthetic-coq/

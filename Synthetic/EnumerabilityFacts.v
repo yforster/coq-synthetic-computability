@@ -292,6 +292,8 @@ Qed.
 
 (** *** Enumerable types  *)
 
+(** # <a id="enumerator_enumerator__T" /> #*)
+
 Lemma enumerator_enumeratorᵗ X f :
   enumerator f (fun _ : X => True) <-> enumeratorᵗ f X.
 Proof.
@@ -299,6 +301,8 @@ Proof.
   - destruct (Hf x) as [[n H] _]; eauto.
   - destruct (Hf x) as [n H]; firstorder.
 Qed.
+
+(** # <a id="enumerable_enumerable__T" /> #*)
 
 Lemma enumerable_enumerableᵗ X :
   enumerable (fun _ : X => True) <-> enumerableᵗ X.

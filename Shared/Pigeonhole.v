@@ -19,6 +19,11 @@ Proof.
   - intros dne P. eapply dne. tauto.
 Qed.
 
+Lemma DNI (P : Prop) : P -> ~~ P.
+Proof.
+  tauto.
+Qed.
+
 Lemma DN (P : Prop) : P -> ~~ P. Proof. tauto. Qed.
 Lemma DN_impl (P Q : Prop) : (P -> ~~Q) -> ~~ P -> ~~ Q. Proof. tauto. Qed.
 Lemma neg_impl (P Q : Prop) : (P -> ~Q) -> ~~ P -> ~ Q. Proof. tauto. Qed.
@@ -35,6 +40,28 @@ Proof.
   intros H1 H2. eapply (negative_dn (P \/ ~P) Q H1 H2). 
   tauto.
 Qed.
+
+Definition MP := forall f : nat -> bool, ~~ (exists n, f n = true) -> exists n, f n = true.
+
+Lemma MP_ca (f : nat -> bool) P Q :
+  MP ->
+  (Q <-> (exists n, f n = true)) ->
+  ((P \/ ~ P) -> Q) -> Q.
+Proof.
+  intros mp ->. eapply negative_ca, mp.
+Qed.
+
+Fact computational_explosion (A : Type) : False -> A.
+Proof.
+  tauto.
+Qed.
+
+Fact typecast X (A : X -> Type) (x1 x2 : X) :
+  x1 = x2 -> A x1 -> A x2.
+Proof.
+  now intros ->.
+Qed.
+  
 
 Tactic Notation "cprove" tactic3(tac) := apply DN; tac.
 
