@@ -215,6 +215,7 @@ Proof.
   intros ?; cbn; eauto. 
 Qed.
 
+(** # <a id="enumerator__T_list" /> #*)
 Lemma enumeratorᵗ_list {X} L :
   list_enumeratorᵗ L X -> list_enumeratorᵗ (L_list L) (list X).
 Proof.

@@ -242,6 +242,23 @@ Proof.
   intros [e He]. eexists. eapply enumerator_graph; eauto.
 Qed.
 
+Lemma enumerable_graph_part {Part : partiality} {X} {Y} (f : X -> part Y) :
+  enumerableᵗ X ->
+  enumerable (fun (x : X * Y) => hasvalue (f (fst x)) (snd x)).
+Proof.
+  intros [e He].
+  exists (fun! ⟨n, m⟩ => if e n is Some x then if seval (f x) m is Some y then Some (x, y) else None else None).
+  intros (x,y). split; cbn.
+  - intros [n Hn] % seval_hasvalue.
+    destruct (He x) as [m Hm].
+    exists ⟨m, n⟩. now rewrite embedP, Hm, Hn.
+  - intros [mn H]. destruct (unembed mn) as [m n].
+    destruct (e m) as [x' | ] eqn:E; try congruence.
+    destruct seval eqn:E'; inversion H; subst.
+    eapply seval_hasvalue. 
+    eauto.
+Qed.
+
 Lemma enumerator_AC X Y e d (R : X -> Y -> Prop) :
   decider d (eq_on X) ->
   enumerator e (uncurry R) ->
@@ -293,7 +310,6 @@ Qed.
 (** *** Enumerable types  *)
 
 (** # <a id="enumerator_enumerator__T" /> #*)
-
 Lemma enumerator_enumeratorᵗ X f :
   enumerator f (fun _ : X => True) <-> enumeratorᵗ f X.
 Proof.
@@ -303,7 +319,6 @@ Proof.
 Qed.
 
 (** # <a id="enumerable_enumerable__T" /> #*)
-
 Lemma enumerable_enumerableᵗ X :
   enumerable (fun _ : X => True) <-> enumerableᵗ X.
 Proof.
@@ -311,6 +326,7 @@ Proof.
 Qed.
 
 Definition nat_enum (n : nat) := Some n.
+(** # <a id="enumerator__T_nat" /> #*)
 Lemma enumeratorᵗ_nat :
   enumeratorᵗ nat_enum nat.
 Proof.
@@ -318,6 +334,7 @@ Proof.
 Qed.
 
 Definition unit_enum (n : nat) := Some tt.
+(** # <a id="enumerator__T_unit" /> #*)
 Lemma enumeratorᵗ_unit :
   enumeratorᵗ unit_enum unit.
 Proof.
@@ -325,6 +342,7 @@ Proof.
 Qed. 
 
 Definition bool_enum (n : nat) := Some (if n is 0 then true else false).
+(** # <a id="enumerator__T_bool" /> #*)
 Lemma enumeratorᵗ_bool :
   enumeratorᵗ bool_enum bool.
 Proof.
@@ -333,8 +351,27 @@ Proof.
   - now exists 1.
 Qed.
 
+(** # <a id="enumerable__T_nat" /> #*)
+Lemma enumerableᵗ_nat : enumerableᵗ nat.
+Proof.
+  eexists. eapply enumeratorᵗ_nat.
+Qed.
+
+(** # <a id="enumerable__T_bool" /> #*)
+Lemma enumerableᵗ_bool : enumerableᵗ bool.
+Proof.
+  eexists. eapply enumeratorᵗ_bool.
+Qed.
+
+(** # <a id="enumerable__T_unit" /> #*)
+Lemma enumerableᵗ_unit : enumerableᵗ unit.
+Proof.
+  eexists. eapply enumeratorᵗ_unit.
+Qed.
+
 Definition prod_enum {X Y} (f1 : nat -> option X) (f2 : nat -> option Y) : nat -> option (X * Y) :=
   fun! ⟨n, m⟩ => if (f1 n, f2 m) is (Some x, Some y) then Some (x, y) else None.
+(** # <a id="enumerator__T_prod" /> #*)
 Lemma enumeratorᵗ_prod {X Y} f1 f2 :
   enumeratorᵗ f1 X -> enumeratorᵗ f2 Y ->
   enumeratorᵗ (prod_enum f1 f2) (X * Y).
@@ -343,6 +380,13 @@ Proof.
   destruct (H1 x) as [n1 Hn1], (H2 y) as [n2 Hn2].
   exists (embed (n1, n2)). unfold prod_enum.
   now rewrite embedP, Hn1, Hn2.
+Qed.
+
+(** # <a id="enumerable__T_prod" /> #*)
+Lemma enumerableᵗ_prod {X Y} :
+  enumerableᵗ X -> enumerableᵗ Y -> enumerableᵗ (X * Y).
+Proof.
+  intros [] []. eexists. now eapply enumeratorᵗ_prod.
 Qed.
 
 Definition dep_prod_enum {X} {Y : X -> Type} (f1 : nat -> option X) (f2 : forall x, nat -> option (Y x)) : nat -> option ({x : X & Y x}) :=
@@ -359,6 +403,7 @@ Qed.
 
 Definition Sigma_enum {X} {Y : X -> Prop} (f1 : nat -> option X) (f2 : forall x, nat -> option (Y x)) : nat -> option ({x : X | Y x}) :=
   fun! ⟨n, m⟩ => if f1 n is Some x then if f2 x m is Some y then Some (exist _ x y) else None else None.
+(** # <a id="enumerator__T_Sigma" /> #*)
 Lemma enumeratorᵗ_Sigma {X} (Y : X -> Prop) f1 f2 :
   enumeratorᵗ f1 X -> (forall x, enumeratorᵗ (f2 x) (Y x)) ->
   enumeratorᵗ (Sigma_enum f1 f2) {x : X | Y x}.
@@ -371,6 +416,7 @@ Qed.
 
 Definition option_enum {X} (f : nat -> option X) n :=
   match n with 0 => Some None | S n => Some (f n) end.
+(** # <a id="enumerator__T_option" /> #*)
 Lemma enumeratorᵗ_option {X} f :
   enumeratorᵗ f X -> enumeratorᵗ (option_enum f) (option X).
 Proof.
@@ -379,7 +425,34 @@ Proof.
   - exists 0. reflexivity.
 Qed.
 
-(** embedability  *)
+(** # <a id="enumerable__T_option" /> #*)
+Lemma enumerableᵗ_option {X} :
+  enumerableᵗ X -> enumerableᵗ (option X).
+Proof.
+  intros []. eexists. now eapply enumeratorᵗ_option.
+Qed.
+
+Definition sum_enum {X Y} (f1 : nat -> option X) (f2 : nat -> option Y) : nat -> option (X + Y) :=
+  fun! ⟨n, m⟩ => if n is 0 then if f1 m is Some x then Some (inl x) else None else if f2 m is Some y then Some (inr y) else None.
+(** # <a id="enumerator__T_sum" /> #*)
+Lemma enumeratorᵗ_sum {X Y} f1 f2 :
+  enumeratorᵗ f1 X -> enumeratorᵗ f2 Y ->
+  enumeratorᵗ (sum_enum f1 f2) (X + Y).
+Proof.
+  intros H1 H2.
+  intros [x | y].
+  - destruct (H1 x) as [n Hn].
+    exists ⟨0, n⟩. unfold sum_enum. now rewrite embedP, Hn.
+  - destruct (H2 y) as [n Hn].
+    exists ⟨1, n⟩. unfold sum_enum. now rewrite embedP, Hn.
+Qed.
+
+(** # <a id="enumerable__T_sum" /> #*)
+Lemma enumerableᵗ_sum {X Y} :
+  enumerableᵗ X -> enumerableᵗ Y -> enumerableᵗ (X + Y).
+Proof.
+  intros [] []. eexists. now eapply enumeratorᵗ_sum.
+Qed.
 
 Definition retraction' {X} {Y} (I : X -> Y) R := forall x : X, R (I x) = Some x.
 Notation retraction I R X Y := (@retraction' X Y I R).
