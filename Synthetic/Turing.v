@@ -319,12 +319,6 @@ Qed.
 
 Context {Part : partiality}.
 
-Definition functional {X Y} (R : X -> Y -> Prop) :=
-  forall x y1 y2, R x y1 -> R x y2 -> y1 = y2.
-
-Definition total {X Y} (R : X -> Y -> Prop) :=
-  forall x, exists y, R x y.
-
 Notation "P ⇉ Q" := ((P -> Q) /\ (~ P -> ~ Q)) (at level 70).
 
 Lemma double_impl {P Q} :
@@ -332,14 +326,6 @@ Lemma double_impl {P Q} :
 Proof.
   firstorder.
 Qed.
-
-Definition pcomputes {X Y} (f : X ↛ Y) (R : X -> Y -> Prop) :=
-  forall x y, f x =! y <-> R x y.
-
-Set Implicit Arguments.
-
-Record FunRel X Y := {the_rel :> X -> Y -> Prop ; the_func_proof : functional the_rel}.
-Arguments the_rel {_ _}.
 
 Record bTuring_red X Y :=
   {
@@ -466,7 +452,7 @@ Lemma partial_decidable {X} (p : X -> Prop) (f : X ↛ bool) :
   (forall x, ter (f x)) -> (forall x, f x =! true <-> p x) -> decidable p.
 Proof.
   intros Hter He.
-  destruct (partial_total _ Hter) as [g Hg].
+  destruct (partial_total _ _ _ Hter) as [g Hg].
   exists g. intros x. red. rewrite <- He. specialize (Hg x).
   destruct (g x); firstorder. eapply hasvalue_det; eauto.
 Qed.
@@ -479,15 +465,15 @@ Proof.
   pose proof (Hq := Hr' (fun x => ret (f x)) (char_rel q)).
   - cbn in *.
     eapply (@Proper_decidable X) with (y := fun x => r (char_rel q) x true).
-    intros x. now rewrite (FunRel_ext' H x true).
+    intros x. now rewrite (FunRel_ext' _ _ H x true).
     unshelve epose proof (Hq _); clear Hq; try rename H0 into Hq.
     + intros x b. rewrite <- ret_hasvalue_iff.
       specialize (Hf x). clear - Hf. destruct b, (f x); firstorder.
     + eapply partial_decidable. 2: intros; eapply Hq.
       intros. eapply (MP_to_MP_partial mp). intros Hx.
       ccase (p x) as [Hp | Hp].
-      -- eapply (FunRel_ext' H x true) in Hp. eapply Hx. eapply Hq in Hp. eexists; eauto.
-      -- eapply (FunRel_ext' H x false) in Hp. eapply Hx. eapply Hq in Hp. eexists; eauto.
+      -- eapply (FunRel_ext' _ _ H x true) in Hp. eapply Hx. eapply Hq in Hp. eexists; eauto.
+      -- eapply (FunRel_ext' _ _ H x false) in Hp. eapply Hx. eapply Hq in Hp. eexists; eauto.
 Qed.
 
 Goal forall X Y (p : X -> Prop) (q : Y -> Prop),
@@ -797,7 +783,7 @@ Proof.
       assert (~~ (l' = l'0)) by (eapply IHl; eauto).
       cunwrap. now subst.
   - intros g R Hg x. intros b. split; cbn.
-    + intros (L & ? % (pcomputes_part_map _ _ _ Hg) & <- % ret_hasvalue_inv) % bind_hasvalue.
+    + intros (L & ? % (pcomputes_part_map _ _ _ _ _ Hg) & <- % ret_hasvalue_inv) % bind_hasvalue.
       exists (map (eq true) L). split.
       * eapply Forall2_fmap_r, Forall2_impl; eauto.
         cbn. clear - H0. intros ? [] ?; firstorder. (* enough (true = false) by congruence. all: eapply R; eauto. *)
@@ -874,12 +860,12 @@ Qed.
 Lemma totalbTuring_function {X Y} (r : bTuring_red X Y) :
   (forall R : FunRel Y bool, total R -> total (r R)) ->
   ∑ F : (Y -> bool) -> (X -> bool),
-        (forall x, forall f f', (forall y, In y (part_cont r x) -> f y = f' y) -> F f x = F f' x) /\
+        (forall x, forall f f', (forall y, In y (part_cont _ _ r x) -> f y = f' y) -> F f x = F f' x) /\
         (forall f x b, r (char_rel_fun f) x b <-> F f x = b).
 Proof.
   intros Htot. destruct r as [r r' C Hr' HC]. cbn in *.
   unshelve eexists. 2:split.
-  - intros f. destruct (partial_total (r' (fun y => ret (f y)))) as [g Hg].
+  - intros f. destruct (partial_total _ _ (r' (fun y => ret (f y)))) as [g Hg].
     + intros. unshelve edestruct (Htot (char_rel_fun f)) as [b Hb].
       1: exact x.
       1: intros ?; cbn; eauto.
@@ -943,7 +929,7 @@ Proof.
          rewrite E. firstorder.
       -- rewrite map_nth. rewrite <- nth_default_eq.
          unfold nth_default. rewrite E. firstorder.
-  + intros x. cbn. specialize (FunRel_ext' H x true) as ->.
+  + intros x. cbn. specialize (FunRel_ext' _ _ H x true) as ->.
     erewrite HC. reflexivity.
     intros y Hy. cbn.
     eapply FunExt. intros b. eapply PropExt.
@@ -958,6 +944,7 @@ Proof.
       eapply pos_nthe; eauto.
       Unshelve. exact bool. exact (fun _ => true). exact true.
 Qed.
+
 
 (** * Turing reductions *)
 
@@ -1147,15 +1134,15 @@ Proof.
   pose proof (Hq := Hr' (fun x => ret (f x)) (char_rel q)).
   - cbn in *.
     eapply (@Proper_decidable X) with (y := fun x => r (char_rel q) x true).
-    intros x. now rewrite (FunRel_ext' H x true).
+    intros x. now rewrite (FunRel_ext' _ _ H x true).
     unshelve epose proof (Hq _); clear Hq; try rename H0 into Hq.
     + intros x b. rewrite <- ret_hasvalue_iff.
       specialize (Hf x). clear - Hf. destruct b, (f x); firstorder.
     +  eapply pcomputes_decider; eauto.
        intros. eapply (MP_to_MP_partial mp). intros Hx.
        ccase (p x) as [Hp | Hp].
-       -- eapply (FunRel_ext' H x true) in Hp. eapply Hx. eapply Hq in Hp. eexists; eauto.
-       -- eapply (FunRel_ext' H x false) in Hp. eapply Hx. eapply Hq in Hp. eexists; eauto.
+       -- eapply (FunRel_ext' _ _ H x true) in Hp. eapply Hx. eapply Hq in Hp. eexists; eauto.
+       -- eapply (FunRel_ext' _ _ H x false) in Hp. eapply Hx. eapply Hq in Hp. eexists; eauto.
 Qed.
 
 Lemma red_bTuring_to_red_Turing {X Y} (p : X -> Prop) (q : Y -> Prop) :
@@ -1368,7 +1355,7 @@ Lemma decidable_bounded_Turing_MP :
   MP.
 Proof.
   intros H. eapply (Post_nempty_to_MP 0).
-  intros p ? % halting.sec_enum ? % halting.sec_enum.
+  intros p ? % halting.semi_decidable_enumerable_iff_nat ? % halting.semi_decidable_enumerable_iff_nat. 
   eapply H with (q := fun x => True).
   eapply bienumerable_bounded_Turing; eauto.
   exists (fun _ => true). cbv. firstorder.

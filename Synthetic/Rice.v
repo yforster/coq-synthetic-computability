@@ -1,4 +1,4 @@
-From Undecidability Require Import EA equiv_on SemiDecidabilityFacts Definitions reductions EnumerabilityFacts.
+From Undecidability Require Import bestaxioms EA equiv_on DecidabilityFacts SemiDecidabilityFacts Definitions reductions EnumerabilityFacts ReducibilityTransport.
 
 Import EmbedNatNotations.
 
@@ -29,55 +29,70 @@ Proof.
     intros y. rewrite <- (Hf x y). firstorder.
 Qed.
 
-(* Lemma enumerable_prod X Y (p : X -> Prop) (q : Y -> Prop) : *)
-(*   enumerable p -> enumerable q -> enumerable (uncurry (fun x y => p x /\ q y)). *)
-(* Proof. *)
-(*   intros [f Hf] [g Hg]. *)
-(*   exists (fun! ⟨n,m⟩ => match f n, g m with Some x, Some y => Some (x, y) | _, _ => None end). *)
-(*   intros (x,y). split; cbn. *)
-(*   - intros [[n1 H1] % Hf [n2 H2] % Hg]. *)
-(*     exists ⟨n1,n2⟩. now rewrite embedP, H1, H2. *)
-(*   - intros [nm H]. destruct (unembed nm) as [n m]. *)
-(*     destruct (f n) eqn:E1, (g m) eqn:E2; try congruence. *)
-(*     inv H. *)
-(*     split. firstorder. firstorder. *)
-(* Qed. *)
-
 Lemma Rice_Theorem {p : nat -> Prop} :
+  (forall c1 c2, W c1 ≡{_} W c2 -> p c1 -> p c2) ->
+  (exists c1, p c1) ->
+  (exists c2, ~ p c2) -> ~ (enumerable p /\ enumerable (compl p)).
+Proof.
+  intros Hequiv [c1 Hc1] [c2 Hc2] [Hp1 Hp2].
+  destruct (do_EA (fun _ => False)) as [c_bot Hbot].
+  - exists (fun _ => None). firstorder congruence.
+  - assert (~~ (p c_bot \/ ~ p c_bot)) as Hc by tauto.
+    apply Hc; clear Hc. intros [? | ?].
+    + clear Hp2. eapply K0_not_enumerable; eauto.
+      eapply enumerable_red; eauto.
+      1: eapply Rice with (c_bot0 := c_bot); eauto.
+      firstorder.
+    + clear Hp1. eapply K0_not_enumerable; eauto.
+      eapply enumerable_red; eauto.
+      1: eapply Rice with (c_bot0 := c_bot) (c := c1); eauto.
+      1: firstorder.
+      intros ? ? ? H1 ?. eapply H1, Hequiv; eauto; firstorder.
+Qed.
+
+Lemma Rice_TheoremCorr {p : nat -> Prop} :
   (forall c1 c2, W c1 ≡{_} W c2 -> p c1 -> p c2) ->
   (exists c1, p c1) ->
   (exists c2, ~ p c2) -> ~ decidable p.
 Proof.
-  intros Hequiv [c1 Hc1] [c2 Hc2] Hp.
-  destruct (do_EA (fun _ => False)) as [c_bot Hbot].
-  - exists (fun _ => None). firstorder congruence.
-  - destruct (DecidabilityFacts.decidable_decide Hp c_bot).
-    + eapply K0_undecidable, red_m_transports; eauto.
-      eapply Rice with (c_bot0 := c_bot); eauto; firstorder.
-    + eapply DecidabilityFacts.decidable_complement in Hp.
-      eapply K0_undecidable, red_m_transports; eauto.
-      eapply Rice with (c_bot0 := c_bot) (c := c1).
-      2:{ intros ? ? ? ? ?. eapply H1, Hequiv; eauto. firstorder. }
-      all: firstorder.
+  intros Hequiv Hc1 Hc2 Hp.
+  eapply Rice_Theorem; eauto.
+  split.
+  - eapply decidable_enumerable; eauto.
+  - eapply decidable_enumerable; eauto.
+    now eapply decidable_complement.
 Qed.
 
+Lemma Rice_HO {p : (nat -> Prop) -> Prop} :
+  (forall (q q' : nat -> Prop), (forall x, q x <-> q' x) -> p q <-> p q') ->
+  forall q1 q2, 
+    enumerable q1 -> enumerable q2 ->
+    p q1 -> ~ p q2 -> ~ decidable p.
+Proof.
+  intros Hequiv q1 q2 H1 H2 Hq1 Hq2 H.
+  eapply (@Rice_TheoremCorr (fun c => p (W c))).
+  - firstorder.
+  - eapply do_EA in H1 as [c Hc]. exists c. firstorder. 
+  - eapply do_EA in H2 as [c Hc]. exists c. firstorder. 
+  - destruct H as [f Hf]. exists (fun c => f (W c)). firstorder.
+Qed.
 
-Module EPF.
+Section EPF.
 
-Axiom Part : partiality.
+Variable Part : partiality.
 
-Axiom Θ : nat -> (nat ↛ nat).
+Variable Θ : nat -> (nat ↛ nat).
 
 Instance equiv_part `{partiality} {A} : equiv_on (part A) := {| equiv_rel := @partial.equiv _ A |}.
 
-Axiom EPFP : forall f : nat -> nat ↛ nat, exists γ, forall x, Θ (γ x) ≡{nat ↛ nat} f x.
+Variable EPF : forall f : nat -> nat ↛ nat, exists γ, forall x, Θ (γ x) ≡{nat ↛ nat} f x.
 
 Lemma FP : forall f, exists e, Θ e ≡{_} Θ (f e).
 Proof.
   intros f.
   pose (h := fun x y => bind (Θ x x) (fun e => Θ e y)).
-  destruct (EPFP h)  as [γ Hγ].
-  destruct (EPFP (fun _ x => ret (f (γ x))))  as [γ' Hc].
+  destruct (EPF h)  as [γ Hγ].
+  destruct (EPF (fun _ x => ret (f (γ x))))  as [γ' Hc].
   pose (c := γ' 0).
   exists (γ c).
   rewrite Hγ. unfold h.
@@ -94,7 +109,7 @@ Lemma Rice_Theorem' {p : nat -> Prop} :
 Proof.
   intros Hequiv [c1 Hc1] [c2 Hc2] [f Hf].
   pose (h x := if f x then Θ c2 else Θ c1).
-  destruct (EPFP h) as [γ H].
+  destruct (EPF h) as [γ H].
   destruct (FP γ) as [c Hc].
   rewrite H in Hc. unfold h in Hc.
   destruct (f c) eqn:E.
@@ -105,3 +120,17 @@ Proof.
 Qed.
 
 End EPF.
+
+Corollary Rice_HO' {Part : partiality} {p : (nat ↛ nat) -> Prop} :
+  EPF -> (forall f f', f ≡{_} f' -> p f <-> p f') ->
+  forall f1 f2, p f1 -> ~ p f2 -> ~ decidable p.
+Proof.
+  intros [θ EPF] Hequiv f1 f2 H1 H2 H.
+  eapply (@Rice_Theorem' Part θ EPF (fun c => p (θ c))).
+  - firstorder.
+  - destruct (EPF (fun _ => f1)) as [c Hc]. exists (c 0).
+    firstorder.
+  - destruct (EPF (fun _ => f2)) as [c Hc]. exists (c 0).
+    firstorder.
+  - destruct H as [f Hf]. exists (fun c => f (θ c)). firstorder.
+Qed.

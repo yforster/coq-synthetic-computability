@@ -505,7 +505,7 @@ From Undecidability Require Import reductions.
 Lemma CT_L_enumerable_equiv :
   CT_L -> forall p : nat -> Prop, enumerable p <-> p ⪯ₘ HaltL.
 Proof.
-  intros ct p. rewrite <- halting.sec_enum. split.
+  intros ct p. rewrite <- halting.semi_decidable_enumerable_iff_nat. split.
   - intros (t & H1 & H2) % CT_L_semidecidable_equiv; eauto.
     eexists. exact H2.
   - intros [f Hf].

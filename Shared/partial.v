@@ -54,6 +54,18 @@ Notation "a =! b" := (hasvalue a b) (at level 50).
 
 Notation "A ↛ B" := (A -> part B) (at level 10).
 
+Definition pcomputes {X Y} `{partiality} (f : X ↛ Y) (R : X -> Y -> Prop) :=
+  forall x y, f x =! y <-> R x y.
+
+Definition functional {X Y} (R : X -> Y -> Prop) :=
+  forall x y1 y2, R x y1 -> R x y2 -> y1 = y2.
+
+Definition total {X Y} (R : X -> Y -> Prop) :=
+  forall x, exists y, R x y.
+
+Record FunRel X Y := {the_rel :> X -> Y -> Prop ; the_func_proof : functional the_rel}.
+Arguments the_rel {_ _}.
+
 Instance part_equiv_Equivalence `{partiality} {A} :
   Equivalence (@equiv _ A).
 Proof.
@@ -268,7 +280,7 @@ Module implementation.
     eapply spec_fun in E2; now specialize (E2 _ Hle) as ->).
   Defined.    
 
-  Lemma bind_hasvalue : forall A B x (f : A -> part B) b, hasvalue (bind x f) b <-> exists a, hasvalue x a /\ hasvalue (f a) b.
+  Lemma bind_hasvalue_imp : forall A B x (f : A -> part B) b, hasvalue (bind x f) b <-> exists a, hasvalue x a /\ hasvalue (f a) b.
   Proof.
     intros A B x f b.
     split.
@@ -303,7 +315,7 @@ Module implementation.
     intros A f. eapply spec_fun.
   Qed.
 
-  Lemma seval_hasvalue : forall A x (a : A), hasvalue x a <-> exists n, seval x n = Some a.
+  Lemma seval_hasvalue_imp : forall A x (a : A), hasvalue x a <-> exists n, seval x n = Some a.
   Proof.
     intros A [f Hf] a. reflexivity.
   Qed.
@@ -403,7 +415,7 @@ Module implementation.
     intros H. eapply lt_list. exact H.
   Qed.  
 
-  Lemma mu_hasvalue : forall (f : nat -> part bool) n, hasvalue (mu f) n <-> (hasvalue (f n) true /\ forall m, m < n -> hasvalue (f m) false).
+  Lemma mu_hasvalue_imp : forall (f : nat -> part bool) n, hasvalue (mu f) n <-> (hasvalue (f n) true /\ forall m, m < n -> hasvalue (f m) false).
   Proof.
     intros f n. split.
     - intros [n1 H]. cbn in H.
@@ -473,11 +485,11 @@ Module implementation.
     - exact @seval.
     - exact @hasvalue_det.
     - exact ret_hasvalue.
-    - exact bind_hasvalue.
+    - exact bind_hasvalue_imp.
     - exact undef_hasvalue.
-    - exact mu_hasvalue.
+    - exact mu_hasvalue_imp.
     - exact seval_mono.
-    - exact seval_hasvalue.
+    - exact seval_hasvalue_imp.
   Defined.
 
 End implementation.

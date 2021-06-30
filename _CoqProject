@@ -3,12 +3,10 @@
 -arg -w -arg -notation-overridden
 COQDOCFLAGS = "--charset utf-8 -s --with-header ./website/resources/header.html --with-footer ./website/resources/footer.html --index indexpage"
 Axioms/EA.v
-Axioms/axioms.v
 Axioms/baire_cantor.v
 Axioms/bestaxioms.v
 Axioms/halting.v
 Axioms/kleenetree.v
-Axioms/newaxioms.v
 Axioms/principles.v
 L/Complexity/GenericNary.v
 L/Complexity/UpToC.v

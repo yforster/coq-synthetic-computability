@@ -1,7 +1,7 @@
 From Coq.Logic Require Import ConstructiveEpsilon.
 Require Import Lia Nat.
 From stdpp Require Import numbers list list_numbers.
-From Undecidability Require Import SemiDecidabilityFacts DecidabilityFacts EnumerabilityFacts halting reductions Axioms.axioms.
+From Undecidability Require Import SemiDecidabilityFacts DecidabilityFacts EnumerabilityFacts reductions Axioms.bestaxioms halting.
 
 (** * CT in relation to other axioms  *)
 
@@ -91,21 +91,28 @@ Qed.
 
 Section CT_wrong.
 
-  Variable model : model_of_computation.
+  Variable ϕ : nat -> nat -> nat -> option nat.
+  Variable Hϕ : forall c x, monotonic (ϕ c x).
 
-  Definition CT_Sigma := forall f : nat -> nat, {n : nat | computes n f }.
+  Definition CT_Sigma := forall f : nat -> nat, {c : nat | forall x, exists n, ϕ c x n = Some (f x) }.
 
   Lemma CT_Sigma_wrong : CT_Sigma -> Fext -> False.
   Proof.
     intros CT fext.
-    eapply K_forall_undec. eapply CT_to_EA. { intros f. destruct (CT f) as [c Hc]. exists c. eapply Hc. }
+    eapply K_nat_undec. { 
+      right. exists ϕ. split; try eassumption.
+      intros f. unshelve eexists.
+      + intros x. destruct (CT (f x)) as [c]. exact c.
+      + intros x y. cbn. destruct (CT (f x)) as [c Hc]; eauto.
+    }
     exists (fun f => Nat.eqb (proj1_sig (CT f)) (proj1_sig (CT (fun _ => 0)))).
     intros f.
     destruct (PeanoNat.Nat.eqb_spec (` (CT f)) (` (CT (fun _ : nat => 0)))).
     - unfold reflects. intuition.
       destruct (CT f) as [cf Hf].
       destruct (CT (fun _ => 0)) as [cc Hc]. cbn in *. subst.
-      exact (computes_ext _ _ _ Hf Hc n).
+      destruct (Hf n), (Hc n).
+      eapply monotonic_agnostic; eauto.
     - unfold reflects. intuition try congruence.
       assert (f = fun x => 0) as -> by now apply fext.
       congruence. 
@@ -240,24 +247,13 @@ Definition CODING :=
   exists F : (nat -> bool) -> nat, forall f, F f = F (fun _ => false) <-> forall n, f n = false.
 
 Lemma no_CODING :
-  CODING -> decidable (compl K).
+  CODING -> decidable (compl K_nat_bool).
 Proof.
   intros [F HF].
   exists (fun f => Nat.eqb (F f) (F (fun _ => false))).
-  intros f. unfold compl, K. red. rewrite <- forall_neg_exists_iff.
+  intros f. unfold compl, K_nat_bool. red. rewrite <- forall_neg_exists_iff.
   destruct (Nat.eqb_spec (F f) (F (fun _ => false))); rewrite <- HF.
   all: firstorder.
-Qed.
-
-Goal forall p : nat -> Prop, K ⪯ₘ p -> (forall f g : nat -> bool, (forall x, f x = g x) -> f = g) ->
-                  decidable (compl K).
-Proof.
-  intros p [F HF] FunExt.
-  eapply no_CODING.
-  exists F. intros f. 
-  split.
-  - intros H. rewrite forall_neg_exists_iff, (HF f), H, <- (HF (fun _ => false)). firstorder.
-  - intros H. f_equal. now eapply FunExt. 
 Qed.
 
 Definition LLPO := forall f g : nat -> bool, ((exists n, f n = true) -> (exists n, g n = true)) \/ ((exists n, g n = true) -> (exists n, f n = true)).
@@ -870,24 +866,16 @@ Proof.
 Qed.
 
 (* *** Compatibility  *)
-
-Lemma enumerable_code (ax : EA) p :
-  enumerable p -> exists c, enumerator (proj1_sig ax c) p.
-Proof.
-  rewrite (W_spec ax p). unfold W. cbn.
-  intros [c H]. exists c. intros x.
-  now rewrite H.
-Qed.
-
+(* 
 Lemma AC_1_0_Fext :
-  AC_1_0 -> Fext -> EA -> decidable (compl K_nat).
+  AC_1_0 -> Fext -> EA -> decidable (compl K_nat_nat).
 Proof.
   intros C Fext EA.
   pose proof (fun f => enumerable_code EA _ (enumerable_graph' f)).
   eapply C in H as [code Hcode].
   exists (fun f => Nat.eqb (code f) (code (fun _ => 0))).
   eapply Proper_decider. intros ?. reflexivity.
-  eapply (K_nat_equiv_compl EA).
+  eapply (K_nat_equiv).
   intros f. split; rewrite NPeano.Nat.eqb_eq.
   - intros E.
     eapply f_equal, Fext, E.
@@ -898,7 +886,7 @@ Proof.
     pose proof(enumerator_ext Hf H (ltac:(reflexivity)) ⟨ n, f n ⟩) as E.
     destruct E as [[x E%(f_equal unembed)] _]; eauto.
     rewrite !embedP in E. now inv E.
-Qed.
+Qed. *)
 
 Lemma AUC_to_dec (p : nat -> Prop) :
   AUC_on nat bool -> (forall n, p n \/ ~ p n) -> decidable p.
@@ -909,44 +897,48 @@ Proof.
     + exists true.  split. left. eauto. intros [];  firstorder congruence. congruence.
     + exists false. split. right. eauto. intros []; firstorder congruence. congruence.
   - exists f. intros n. destruct (Hf n) as [[H ->] | [H ->]]; firstorder congruence. congruence.
-Qed. 
+Qed.
 
-Lemma AC_0_0_LPO_incompat' (ax : EA) :
-  AUC_on nat bool -> WLPO -> decidable (compl (K0 ax)).
+Lemma AC_0_0_LPO_incompat'  :
+  AUC_on nat bool -> WLPO -> EPF_bool -> forall p : nat -> Prop,
+    semi_decidable p -> decidable (compl p).
 Proof.
-  intros C LPO % WLPO_semidecidable_iff.
+  intros C LPO % WLPO_semidecidable_iff EPF p Hp. 
   eapply AUC_to_dec; eauto.
-  eapply LPO, sec_enum, K0_enum.
 Qed.
 
 Lemma AC_0_0_LPO_incompat :
-  AUC_on nat bool -> WLPO -> EA -> False.
+  AUC_on nat bool -> WLPO -> EPF_bool -> False.
 Proof.
-  intros C LPO EA.
-  now eapply (K0_compl_undec EA), AC_0_0_LPO_incompat'.
+  intros C LPO EPF_bool.
+  destruct (EPF_SCT_halting) as (K & H1 & H2 & H3 & H4); [eauto|].
+  eapply H4. eapply AC_0_0_LPO_incompat'; eauto.
 Qed.
 
-Lemma AC_1_0_Fext_CODING {Mod : model_of_computation} :
-  AC_1_0 -> Fext -> CT -> CODING.
+Lemma AC_1_0_Fext_CODING :
+  AC_1_0 -> Fext -> SCT -> CODING.
 Proof.
-  intros C Fext [F HF] % C. 
+  intros C Fext (ϕ & Hmono & Hϕ).
+  assert (forall f : nat -> nat, exists c, forall x, exists n, ϕ c x n = Some (f x)) as [F HF] % C. {
+    intros f. destruct (Hϕ (fun _ => f)) as [c Hc].
+    eexists. eapply (Hc 0).
+  } 
   exists (fun (f : nat -> bool) => F (fun x : nat => if f x then 0 else 1)).
   intros f. split.
   + intros H x.
     pose proof (HF (λ _ : nat, 1) x) as [n1 Hn1]. rewrite <- H in Hn1.
     pose proof (HF (λ x : nat, if f x then 0 else 1) x) as [n2 Hn2].
-    eapply monotonic_agnostic in Hn1. 2: eapply Mod.
+    eapply monotonic_agnostic in Hn1. 2: eapply Hmono.
     eapply Hn1 in Hn2. destruct (f x); congruence.
   + intros H2. f_equal. eapply Fext. intros x. rewrite H2. reflexivity.
 Qed.
 
-Lemma AC_1_0_Fext_incompat {Mod : model_of_computation} :
-  AC_1_0 -> Fext -> CT -> False.
+Lemma AC_1_0_Fext_incompat :
+  AC_1_0 -> Fext -> SCT -> False.
 Proof.
   intros C funext ct.
-  eapply K_compl_undec.
-  - eapply CT_to_EA, ct.
-  - now eapply no_CODING, AC_1_0_Fext_CODING.
+  eapply K_nat_bool_undec; [ eauto | ].
+  now eapply no_CODING, AC_1_0_Fext_CODING.
 Qed.
 
 (** ** Brouwer's intuitionism *)
@@ -990,17 +982,23 @@ Proof.
   eapply (max_list_with_spec x l id).
 Qed.
 
-Lemma WC_N_CT_inc {model : model_of_computation} :
-  WC_N -> CT -> False.
+Lemma WC_N_CT_inc :
+  WC_N -> SCT -> False.
 Proof.
-  intros WC CT.
-  destruct (WC (fun α c => computes c α) CT (fun x => 0)) as [L [c H]].
+  intros WC [ϕ [Hm CT]].
+  edestruct (WC (fun α c => forall x, exists n, ϕ c x n = Some (α x))) with (α := fun x : nat => 0) as [L [c H]].
+  - intros f. destruct (CT (fun _ => f)) as [c]. eexists. eapply (H 0).
   - unshelve epose proof (H (fun x => if ListDec.In_dec Nat.eq_dec x L is left _ then 0 else 1) _).
     + eapply map_ext_in. intros a Ha. now destruct List.In_dec.
-    + eapply computes_ext with (f2 := fun _ => 0) (x := 1 + max_list L) in H0; eauto.
-      destruct ListDec.In_dec as [H1 | H1].
-      * eapply max_list_spec in H1. lia.
-      * lia.
+    + destruct (H0 (1 + max_list L)).
+      destruct (H _ eq_refl (1 + max_list L)).
+      enough (1 = 0) by lia.
+      eapply monotonic_agnostic.
+      * eapply Hm.
+      * rewrite H1. destruct ListDec.In_dec as [HH | HH].
+        -- eapply max_list_spec in HH. lia.
+        -- reflexivity.
+      * eauto.
 Qed.
 
 Definition Cont := forall F : (nat -> nat) -> nat, forall f, exists L, forall g, map f L = map g L -> F f = F g.

@@ -1,5 +1,4 @@
-From Undecidability Require Import DecidabilityFacts EnumerabilityFacts SemiDecidabilityFacts ListEnumerabilityFacts Axioms.axioms embed_nat reductions partial.
-Require Import ssreflect.
+From Undecidability Require Import DecidabilityFacts EnumerabilityFacts SemiDecidabilityFacts ListEnumerabilityFacts Axioms.bestaxioms embed_nat reductions partial.
 
 Require Import Undecidability.Synthetic.EnumerabilityFacts.
 
@@ -7,7 +6,7 @@ Require Import Undecidability.Synthetic.EnumerabilityFacts.
 
 Section assm.
 
-Lemma sec_enum (p : nat -> Prop) : semi_decidable p <-> enumerable p.
+Lemma semi_decidable_enumerable_iff_nat (p : nat -> Prop) : semi_decidable p <-> enumerable p.
 Proof.
   split.
   - intros. eapply semi_decidable_enumerable; eauto.
@@ -15,159 +14,86 @@ Proof.
     eapply discrete_iff. econstructor. exact _.
 Qed.
 
-Lemma dec_to_enum (p : nat -> Prop) :
-  decidable p -> enumerable p.
+Lemma EPF_SCT_halting :
+  EPF_bool + SCT -> exists K : nat -> Prop, semi_decidable K /\ ~ semi_decidable (compl K) /\ ~ decidable K /\ ~ decidable (compl K).
 Proof.
-  intros. eapply decidable_enumerable; eauto.
+  intros [H | H].
+  - now eapply EPF_halting.
+  - eapply SCT_to_CT in H as [ϕ]. eapply CT_halting; eauto.
 Qed.
 
-Variable ax : EA.
-Context {Part : partiality}.
+Definition K_nat_bool (f : nat -> bool) := exists n, f n = true.
+Definition K_nat_nat  (f : nat -> nat) := exists n, f n <> 0.
 
-Notation φ := (proj1_sig ax).
-Notation φ_spec := (proj2_sig ax).
-Notation W := (W ax).
-
-Lemma W_spec : forall p : nat -> Prop, enumerable p <-> exists c, W c ≡{nat -> Prop} p.
+Lemma K_nat_bool_complete {X} (p : X -> Prop) :
+  semi_decidable p <-> p ⪯ₘ K_nat_bool.
 Proof.
-  eapply (EA_to_EA'_prf ax).
+  reflexivity.
 Qed.
 
-Definition K0 := fun x => W x x.  
-
-Lemma K0_enumerable : ~ enumerable (compl K0).
-Proof.
-  intros He. eapply W_spec in He as [c].
-  specialize (H c). cbn in H. firstorder.
-Qed.
-
-Lemma K0_undec : ~ decidable K0. 
-Proof.
-  now move => / decidable_complement / dec_to_enum / K0_enumerable.
-Qed.
-
-Lemma K0_compl_undec : ~ decidable (compl K0).
-Proof.
-  now move => / dec_to_enum / K0_enumerable.
-Qed.
-
-Lemma enumerable_W : enumerable (fun '(x, y) => W x y).
-Proof.
-  exists (fun p => let (n,m) := unembed p in if φ n m is Some m then Some (n, m) else None).
-  move => [n m].
-  split.
-  - move => H.
-    destruct ax as [e He].
-    cbv in H. destruct H as [n' H].
-    exists (embed (n, n')). rewrite embedP. cbn. now rewrite H.
-  - unfold W.
-    move => [p H].
-    destruct (unembed p) as [n' m'].
-    exists m'.
-    destruct (φ n' m') eqn:E; inversion H; now subst.
-Qed.
-
-Lemma K0_enum : enumerable K0.
-Proof.
-  destruct enumerable_W as [f Hf].
-  exists (fun n => if f n is Some (n, m) then if Nat.eqb n m then Some n else None else None).
-  move => m. split.
-  - move => / (Hf (m,m)) [n H].
-    exists n. now rewrite H PeanoNat.Nat.eqb_refl.
-  - move => [n H].
-    eapply (Hf (m, m)). exists n.
-    destruct (f n); try congruence.
-    destruct p as (n', m').
-    now destruct (NPeano.Nat.eqb_spec n' m'); inv H.
-Qed.
-
-Lemma semi_decidable_K : semi_decidable K.
-Proof.
-  eapply semi_decidable_red_K_iff. reflexivity.
-Qed.
-
-Lemma enumerable_red_K_iff {p : nat -> Prop} :
-  enumerable p <-> p ⪯ₘ K.
-Proof.
-  rewrite <- sec_enum. eapply semi_decidable_red_K_iff.
-Qed.
-
-Lemma K0_red_K : K0 ⪯ₘ K.
-Proof.
-  rewrite <- semi_decidable_red_K_iff, sec_enum.
-  eapply K0_enum.
-Qed.
-
-Definition K (f : nat -> bool) := exists n, f n = true.
-
-Goal forall p : nat -> Prop, K ⪯ₘ p -> (forall f g : nat -> bool, (forall x, f x = g x) -> f = g) ->
-                  forall f : nat -> bool, ~~ (exists n, f n = true) \/ ~ (exists n, f n = true).
-Proof.
-  intros p [F HF] FunExt f.
-  destruct (PeanoNat.Nat.eq_dec (F f) (F (fun _ => false))) as [E | E].
-  - right. intros H % HF. rewrite E in H. eapply HF in H as [n [=]].
-  - left. intros H. eapply E. f_equal. eapply FunExt.
-    intros n. destruct (f n) eqn:E'; firstorder congruence.
-Qed.
-
-Lemma K_compl_undec : ~ decidable (compl K).
-Proof.
-  intros H.
-  eapply K0_compl_undec, red_m_transports. eapply red_m_complement, K0_red_K. eassumption.
-Qed.
-
-Definition K_nat := fun f => exists n : nat, f n <> 0.
-
-Lemma K_nat_equiv :
-  K_nat ≡ₘ K.
+Lemma K_nat_bool_equiv :
+  K_nat_bool ≡ₘ K_nat_nat.
 Proof.
   split.
+  - exists (fun (f : nat -> bool) x => if f x then 1 else 0).
+    intros f. unfold K_nat_nat, K_nat_bool.
+    split.
+    + intros [n Hn]. exists n.
+      rewrite Hn. eauto.
+    + intros [n Hn]. exists n.
+      destruct (f n); congruence.
   - exists (fun f x => negb (Nat.eqb (f x) 0)).
-    move => f. unfold K_nat, K.
+    intros f. unfold K_nat_nat, K_nat_bool.
     setoid_rewrite Bool.negb_true_iff.
     now setoid_rewrite NPeano.Nat.eqb_neq.
-  - exists (fun f x => if f x then 1 else 0).
-    move => f. unfold K_nat, K.
-    split.
-    + move => [] n Hn. exists n.
-      rewrite Hn. eauto.
-    + move => [] n Hn. exists n.
-      destruct (f n); congruence.
 Qed.
 
-Lemma K_nat_equiv_compl :
-  compl K_nat ≡{_} (fun f => forall n : nat, f n = 0).
+Lemma K_nat_equiv :
+  compl K_nat_nat ≡{_} (fun f => forall n : nat, f n = 0).
 Proof.
-  move => f.
-  split; move => H.
-  - move => n. destruct (f n) eqn:E. reflexivity.
+  intros f.
+  split; intros H.
+  - intros n. destruct (f n) eqn:E. reflexivity.
     destruct H. exists n. now rewrite E.
-  - move => []. firstorder.
+  - firstorder.
 Qed.
 
-Lemma K_forall_undec :
-  ~ decidable (fun f => forall n : nat, f n = 0).
+
+Lemma K_nat_bool_undec :
+  EPF_bool + SCT -> ~ decidable (compl K_nat_bool).
 Proof.
-  rewrite Proper_decidable.
-  2:{ intros ?. symmetry. eapply K_nat_equiv_compl. }
-  intros H. eapply K_compl_undec.
-  eapply red_m_transports. eapply red_m_complement. eapply K_nat_equiv. eassumption.
-Qed.
+  intros [K (SK & _ & _ & HK)] % EPF_SCT_halting Hd.
+  eapply HK, red_m_transports.
+  - eapply red_m_complement.
+    now eapply K_nat_bool_complete.
+  - eauto.
+Qed.  
 
-Lemma W_maximal (p : nat -> Prop) :
-  enumerable p -> p ⪯ₘ uncurry W.
+Lemma K_nat_undec :
+  EPF_bool + SCT -> ~ decidable (fun f => forall n : nat, f n = 0).
 Proof.
-  intros [f Hf].
-  pose proof (proj2_sig ax f) as [c Hc].
-  exists (fun x => (c, x)). red. unfold W. cbn in *.
-  setoid_rewrite Hc. exact Hf.
-Qed.
+  intros [K (SK & _ & _ & HK)] % EPF_SCT_halting Hd.
+  eapply Proper_decidable in Hd.
+  2:{ intros ?. eapply K_nat_equiv. }
+  eapply HK, red_m_transports.
+  - eapply red_m_complement.
+    eapply red_m_transitive. 
+    + now eapply K_nat_bool_complete.
+    + eapply K_nat_bool_equiv.
+  - eauto.
+Qed.  
 
-(* Goal *)
-(*   (forall p : nat -> nat -> Prop, enumerable (uncurry p) -> exists c, forall x y,  W (c x) y <-> p x y) -> *)
-(*   forall f, exists k, forall c x, W (k c) x <-> W c (f x). *)
-(* Proof. *)
-(*   intros H f. *)
-(*   eapply H.  *)
+Lemma K_nat_nored {p : nat -> Prop} :
+   (forall g g' : nat -> nat, (forall x, g x = g' x) -> g = g') ->
+  (fun f => forall n : nat, f n = 0) ⪯ₘ p -> decidable (fun f => forall n : nat, f n = 0).
+Proof.
+  intros Funext [F HF].
+  exists (fun f => Nat.eqb (F f) (F (fun _ => 0))).
+  intros f.
+  red. rewrite PeanoNat.Nat.eqb_eq.
+  split.
+  - intros H. f_equal. now eapply Funext.
+  - intros H. eapply HF. rewrite H. now eapply HF.
+Qed.
 
 End assm.
