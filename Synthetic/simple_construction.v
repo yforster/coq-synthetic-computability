@@ -570,10 +570,11 @@ Section fix_ct.
     simple S.
   Proof.
     split.
-    - exact S_SemiDec.
+    - eapply semi_decidable_enumerable; eauto. exact S_SemiDec.
     - split. 
       + exact S_coInfinite.
-      + intros (? & ? & ? & ?). eapply S_No_S_Inf_Subset; eauto. 
+      + intros (? & ? % enumerable_semi_decidable & ? & ?); eauto.
+        eapply S_No_S_Inf_Subset; eauto. 
   Qed.
 
 
@@ -582,15 +583,6 @@ End fix_ct.
 Section S_Star.
   Import  Coq.Init.Nat. 
 
-  (* Assuming enumerator of semidecidable predicates W, its semidecidability, 
-     Variation of the SMN-Theorem, and the computability of List indices *)
-
-  (* Variable W : nat -> nat -> Prop.  *)
-
-  (* Lemma es : forall p : nat -> Prop, semi_decidable p <-> exists c, forall x, W c x <-> p x. *)
-  (* Proof. *)
-  (*   intros p. rewrite <- enum_iff, W_spec. firstorder. *)
-  (* Qed. *)
 
   Variable W_SDec: nat * nat -> nat -> bool.
   Variable W_semidecider: semi_decider W_SDec (fun '(c,x) => W c x).
@@ -779,10 +771,10 @@ Section S_Star.
     simple S_Star.
   Proof.
     split.
-    - exact S_Star_semidec.
+    - eapply semi_decidable_enumerable; eauto. exact S_Star_semidec.
     - split.
       + exact S_Star_coInfinite.
-      + intros (? & ? & ? & ?).
+      + intros (? & ? % enumerable_semi_decidable & ? & ?); eauto.
         eapply S_Star_No_S_Inf_Subset; eauto.
   Qed.
 

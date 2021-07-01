@@ -2,7 +2,7 @@ Require Import Undecidability.Axioms.EA.
 Require Import Undecidability.Shared.Pigeonhole.
 Require Import Undecidability.Synthetic.FinitenessFacts.
 Require Import Undecidability.Synthetic.reductions Undecidability.Synthetic.truthtables.
-Require Import Undecidability.Synthetic.DecidabilityFacts Undecidability.Synthetic.SemiDecidabilityFacts Undecidability.Synthetic.ReducibilityFacts.
+Require Import Undecidability.Synthetic.DecidabilityFacts Undecidability.Synthetic.EnumerabilityFacts Undecidability.Synthetic.SemiDecidabilityFacts Undecidability.Synthetic.ReducibilityFacts.
 Require Import Undecidability.Shared.ListAutomation.
 Require Import List Arith.
 
@@ -70,10 +70,10 @@ Proof.
 Qed.
 
 Definition simple (p : nat -> Prop) :=
-  semi_decidable p /\ ~ exhaustible (compl p) /\ ~ exists q, semi_decidable q /\ ~ exhaustible q /\ (forall x, q x -> compl p x).
+  enumerable p /\ ~ exhaustible (compl p) /\ ~ exists q, enumerable q /\ ~ exhaustible q /\ (forall x, q x -> compl p x).
 
-Lemma simple_non_semi_decidable p : 
-  simple p -> ~ semi_decidable (compl p).
+Lemma simple_non_enumerable p : 
+  simple p -> ~ enumerable (compl p).
 Proof.
   intros (H1 & H2 & H3) H4.
   apply H3. eauto.
@@ -82,7 +82,8 @@ Qed.
 Lemma simple_undecidable p :
   simple p -> ~ decidable p.
 Proof.
-  now intros ? ? % decidable_complement % decidable_semi_decidable % simple_non_semi_decidable.
+  intros ? ? % decidable_complement % decidable_enumerable; eauto.
+  now eapply simple_non_enumerable in H1.
 Qed.
 
 Lemma simple_m_incomplete p :
@@ -90,8 +91,7 @@ Lemma simple_m_incomplete p :
 Proof.
   intros (H1 & H2 & H3) (q & Hq1 & Hq2 & Hq3) % many_one_complete_subpredicate.
   eapply H3. exists q; repeat split; eauto.
-  - eapply enumerable_semi_decidable. eapply discrete_nat. eauto.
-  - now eapply unbounded_non_finite, dedekind_infinite_unbounded.
+  now eapply unbounded_non_finite, dedekind_infinite_unbounded.
 Qed.
 
 Lemma non_finite_non_empty {X} (p : X -> Prop) :
@@ -107,11 +107,11 @@ Proof.
   apply (non_finite_non_empty _ H2). intros [x0 Hx0].
   apply H3.
   exists (fun x => exists n, x = f (x0, n)). split. 2:split.
-  - exists (fun x n => Nat.eqb x (f (x0, n))).
+  - eapply semi_decidable_enumerable; eauto.
+    exists (fun x n => Nat.eqb x (f (x0, n))).
     intros x. split; intros [n H]; exists n; destruct (Nat.eqb_spec x (f (x0, n))); firstorder congruence.
   - eapply unbounded_non_finite, dedekind_infinite_unbounded.
     exists (fun n => f (x0, n)). intros. split. eauto.
     now intros ? [=] % inj_f.
   - intros ? [n ->]. red. now rewrite <- (Hf (x0, n)).
 Qed.
-

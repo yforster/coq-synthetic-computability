@@ -46,7 +46,7 @@ Proof.
   eexists.
   split; [ | repeat eapply conj].
   - eapply S_simple; eauto. 
-  - eapply semi_decidable_enumerable. eauto. eapply S_simple; eauto.
+  - eapply S_simple; eauto.
   - eapply simple_undecidable. eapply S_simple; eauto.
   - intros H. eapply simple_m_incomplete. eapply S_simple; eauto. 
     intros q Hq.
@@ -67,7 +67,7 @@ Proof.
     eapply decidable_enumerable. 2:eauto. exists (fun _ => true). firstorder.
   } 
   epose (S := S W_sdec H_sdec c_top ltac:(abstract firstorder)).
-  assert (H1 : enumerable S). { eapply semi_decidable_enumerable. eauto. eapply S_simple; eauto. }
+  assert (H1 : enumerable S). { eapply S_simple; eauto. }
   assert (H2 : ~ decidable S). { eapply simple_undecidable. eapply S_simple; eauto. }
   assert (H3 : ((fun '(x,_) => S x) : nat * nat -> Prop) ⪯ₘ S). { exists (fun '(x,_) => x). now intros (x, _). }
   exists (fun '(x,_) => S x). exists S. repeat eapply conj.
@@ -117,7 +117,7 @@ Proof.
     eapply decidable_enumerable. 2:eauto. exists (fun _ => true). firstorder.
   } 
   epose (S_Star := S_Star W_sdec H_sdec c_top ltac:(abstract firstorder)).
-  assert (H1 : enumerable S_Star). { eapply semi_decidable_enumerable. eauto. eapply S_Star_simple; eauto. }
+  assert (H1 : enumerable S_Star). { eapply S_Star_simple; eauto. }
   assert (H2 : ~ decidable S_Star). { eapply simple_undecidable. eapply S_Star_simple; eauto. }
   exists (fun! ⟨n,m⟩ => W n m), S_Star. repeat eapply conj.
   - eapply enumerable_red. eapply W_uncurry_red. eauto. eauto.
