@@ -1,13 +1,14 @@
-From Undecidability Require Import Synthetic.DecidabilityFacts Synthetic.SemiDecidabilityFacts Synthetic.EnumerabilityFacts Synthetic.ListEnumerabilityFacts reductions partial embed_nat ReducibilityFacts truthtables.
+From Undecidability Require Import Synthetic.DecidabilityFacts Synthetic.SemiDecidabilityFacts Synthetic.EnumerabilityFacts Synthetic.ListEnumerabilityFacts reductions partial embed_nat ReducibilityFacts truthtables bestaxioms.
 Require Import Setoid Program Lia List.
 
-Axiom φ : nat -> nat -> option nat.
+Axiom EA : EA.
 
-Axiom EAP : forall p : nat -> nat -> Prop, penumerable p -> exists γ, forall x, enumerator (φ (γ x)) (p x).
+Notation φ := (proj1_sig EA).
+Notation EAP := (proj2_sig EA).
 
 Lemma EAS : forall p : nat -> nat -> Prop, enumerable (uncurry p) -> exists γ, forall x, enumerator (φ (γ x)) (p x).
 Proof.
-  intros p [γ H] % penumerable_iff % EAP; eauto.
+  intros p [γ H] % penumerable_iff % EAP; firstorder; eauto.
   eapply discrete_nat.
 Qed.
 
@@ -87,8 +88,7 @@ Proof.
   exists (fun p => let (n,m) := unembed p in if φ n m is Some m then Some (n, m) else None).
   intros [n m].
   split.
-  - intros H.
-    cbv in H. destruct H as [n' H].
+  - intros H. destruct H as [n' H].
     exists (embed (n, n')). rewrite embedP. cbn. now rewrite H.
   - unfold W.
     intros [p H].
@@ -132,49 +132,6 @@ Tactic Notation "intros" "⟨" ident(n) "," ident(m) "⟩" :=
   let E := fresh "E" in
   intros nm; destruct (unembed nm) as [n m] eqn:E.
 
-Definition retraction_tight {X} {Y} (I : X -> Y) R := forall x : X, R (I x) = Some x /\ forall y, R y = Some x -> I x = y.
-
-From Undecidability Require Import Dec.
-
-Lemma retraction_to_tight {X} {Y} (I : X -> Y) R (HY : eq_dec Y) :
-  retraction' I R ->
-  exists R',
-  retraction_tight I R'.
-Proof.
-  exists (fun y => if R y is Some x then if Dec (y = I x) then Some x else None else None).
-  intros x. rewrite H.  destruct Dec; try congruence. split.
-  - reflexivity.
-  - intros y. destruct (R y). destruct Dec.
-    all: now intros [= ->].
-Qed.
-
-(* Lemma EAS_datatype_direct X (p : X -> nat -> Prop) (x0 : X) : *)
-(*   datatype X -> *)
-(*   enumerable (uncurry p) -> *)
-(*   exists c : X -> nat, forall x y, p x y <-> W (c x) y. *)
-(* Proof. *)
-(*   intros (I & R & (R' & HIR) % (retraction_to_tight _ _ _) ) Hp. *)
-(*   assert (enumerable (fun! ⟨n,m⟩ => if R' n is Some x then p x m else False)). { *)
-(*     destruct Hp as [e He]. *)
-(*     exists (fun n => if e n is Some (x, m) then Some ⟨I x, m⟩ else None). *)
-(*     intros ⟨n,m⟩. *)
-(*     split. *)
-(*     - destruct (R' n) eqn:ER; [ intros [n' H] % (He (_,_)) | intros []]. *)
-(*       exists n'. rewrite H. f_equal. *)
-(*       rewrite <- embedP. rewrite unembedP. *)
-(*       rewrite <- (@unembedP nm), E. repeat f_equal. now eapply HIR. *)
-(*     - intros [n' H]. destruct (e n') as [ [x m'] | ] eqn:E2; try congruence. *)
-(*       inv H. rewrite embedP in E. inv E. destruct (HIR x) as [-> _]. *)
-(*       eapply (He (_,_)). eauto. *)
-(*   } *)
-
-(*   destruct (do_EA _ H) as [c Hc]. *)
-(*   exists (fun x => s c (I x)). *)
-(*   intros x y. *)
-(*   rewrite SMN, <- Hc, embedP. *)
-(*   now destruct (HIR x) as [-> _]. *)
-(* Qed. *)
-
 Definition K0 c := W c c.
 
 Lemma K0_not_enumerable : ~ enumerable (compl K0).
@@ -207,7 +164,7 @@ Proof.
   exists (fun '(n,m) => ⟨n,m⟩). intros [n m]. now rewrite embedP.
 Qed.
 
-Hint Resolve discrete_prod discrete_nat : core.
+Global Hint Resolve discrete_prod discrete_nat : core.
 
 Lemma W_not_enumerable : ~ enumerable (compl (uncurry W)).
 Proof.
@@ -245,10 +202,8 @@ Proof.
   now rewrite embedP.
 Qed.
 
-Lemma m_complete_K0 : m-complete K0.
+Lemma W_red_K0 : (fun! ⟨n,m⟩ =>  W n m) ⪯ₘ K0.
 Proof.
-  intros q Hq % m_complete_W.
-  eapply red_m_transitive. exact Hq.
   edestruct EAS with (p := fun! ⟨x,y⟩ => fun (z : nat) => W x y) as [c Hc].
   - eapply ReducibilityFacts.enumerable_red with (q := uncurry W); eauto.
     2: eapply enumerable_W. all:eauto.
@@ -256,6 +211,12 @@ Proof.
     cbn. now destruct (unembed xy) as [x y]. 
   - exists c. intros xy. unfold K0. rewrite <- (Hc xy (c xy)).
     now destruct (unembed xy) as [x y].
+Qed.
+
+Lemma m_complete_K0 : m-complete K0.
+Proof.
+  intros q Hq % m_complete_W.
+  eapply red_m_transitive. exact Hq. exact W_red_K0.
 Qed.
 
 Lemma enum_iff (p : nat -> Prop) : enumerable p <-> semi_decidable p.
@@ -267,7 +228,8 @@ Qed.
 
 Lemma generative_W :   generative (fun! ⟨ n, m ⟩ => W n m).
 Proof.
-  eapply unbounded_generative. intros x y; decide (x = y); eauto.
+  eapply unbounded_generative. 
+  intros x y; destruct (numbers.nat_eq_dec x y); eauto.
   destruct (do_EA (fun _ => True)) as [c_top H_top]. {
     eapply decidable_enumerable. 2:eauto. exists (fun _ => true). firstorder.
   }
