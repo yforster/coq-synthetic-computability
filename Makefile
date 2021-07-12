@@ -25,5 +25,5 @@ force Makefile _CoqProject.in: ;
 
 .PHONY: all html clean force mkCoqProject deploy
 
-deploy:
+deploy: html
 	rsync -r website/ forster@alfred.ps.uni-saarland.de:~/public_html/thesis/synthetic-coq/
