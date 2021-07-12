@@ -19,6 +19,11 @@ Proof.
   now destruct H1, H2.
 Qed.
 
+Fact PredExt : forall X : Type, forall p q : X -> Prop, (forall x, p x <-> q x) -> p = q.
+Proof.
+  intros. eapply FunExt. intros. now eapply PropExt.
+Qed.
+
 (** * Propositional truth table reductions  *)
 
 Definition truthtable {X} (r : X -> list Prop -> Prop) :=
@@ -385,28 +390,6 @@ Proof.
   cbn; eauto.
 Qed.
 
-(* Lemma mkTuring {X Y} {p : X -> Prop} {q : Y -> Prop} (r : FunRel Y bool -> FunRel X bool) (r' : (Y ↛ bool) -> (X ↛ bool)) (C : X -> list Y) : *)
-(*   (forall f R, pcomputes f (the_rel R) -> pcomputes (r' f) (r R)) -> *)
-(*   (forall x, forall R R' : FunRel Y bool, (forall y, In y (C x) -> R y = R' y) -> r R x = r R' x) -> *)
-(*   char_rel p = r (char_rel q) -> *)
-(*   red_Turing p q. *)
-(* Proof. *)
-(*   intros Hr' Hcont Hpq. *)
-(*   unshelve eexists. *)
-(*   eapply Build_Turing_red with (red_fun_rel := r) (red_fun_part := r') (part_cont := C); eauto. *)
-(*   - intros x f f' HC. *)
-(*     pose proof (Hf := Hr' f (rel_of_pfun f) (rel_of_pfun_pcomputes f)). *)
-(*     pose proof (Hf' := Hr' f' (rel_of_pfun f') (rel_of_pfun_pcomputes f')). *)
-(*     split. *)
-(*     + intros H % Hf. erewrite Hcont in H. 1: now eapply Hf' in H. *)
-(*       intros y Hy % HC. eapply FunExt; intros; eapply PropExt. *)
-(*       unfold rel_of_pfun. cbn. eapply Hy. *)
-(*     + intros H % Hf'. erewrite Hcont in H. 1: now eapply Hf in H. *)
-(*       intros y Hy % HC. eapply FunExt; intros; eapply PropExt. *)
-(*       unfold rel_of_pfun. cbn. symmetry. eapply Hy. *)
-(*   - cbn. eauto. *)
-(* Qed. *)
-
 Definition red_totalbTuring {X Y} (p : X -> Prop) (q : Y -> Prop) :=
   exists r : bTuring_red X Y,   (forall R : FunRel Y bool, total R -> total (r R)) /\ char_rel p = r (char_rel q).
 
@@ -424,6 +407,12 @@ Proof.
 Qed.
 Notation "P ⪯ᴛb Q" := (red_bTuring P Q) (at level 50).
 Notation "P ⪯ₜᴛb Q" := (red_totalbTuring P Q) (at level 50).
+
+Lemma total_bounded_Turing_bounded_Turing {X Y} (p : X -> Prop) (q : Y -> Prop) :
+  p ⪯ₜᴛb q ->  p ⪯ᴛb q.
+Proof.
+  intros []. exists x. firstorder.
+Qed.
 
 Lemma bTuring_refl {X} (p : X -> Prop) :
   p ⪯ᴛb p.
@@ -459,7 +448,7 @@ Qed.
 
 Lemma red_bTuring_decidable : forall X Y (p : X -> Prop) (q : Y -> Prop),
     MP ->
-    p ⪯ᴛb q -> decidable q -> decidable p.
+    p ⪯ᴛb q -> decidable q -> decidable p. (* The converse direction is proved below as decidable_bounded_Turing_MP *)
 Proof.
   intros X Y p q mp ([r r' C Hr' HC] & H) [f Hf].
   pose proof (Hq := Hr' (fun x => ret (f x)) (char_rel q)).
@@ -474,6 +463,37 @@ Proof.
       ccase (p x) as [Hp | Hp].
       -- eapply (FunRel_ext' _ _ H x true) in Hp. eapply Hx. eapply Hq in Hp. eexists; eauto.
       -- eapply (FunRel_ext' _ _ H x false) in Hp. eapply Hx. eapply Hq in Hp. eexists; eauto.
+Qed.
+
+Lemma reflects_iff (b : bool) P :
+  (if b then P else ~ P) <-> reflects b P.
+Proof.
+  destruct b; firstorder.
+Qed.
+
+Lemma total_bounded_Turing_transport {X Y} (p : X -> Prop) (q : Y -> Prop) :
+  p ⪯ₜᴛb q -> decidable q -> decidable p.
+Proof.
+  intros ([r r' C Hr' HC] & [Htot H]) [f Hf].
+  pose proof (Hq := Hr' (fun x => ret (f x)) (char_rel q)).
+  - cbn in *.
+    eapply (@Proper_decidable X) with (y := fun x => r (char_rel q) x true).
+    intros x. now rewrite (FunRel_ext' _ _ H x true).
+    unshelve epose proof (Hq _); clear Hq; try rename H0 into Hq.
+    + intros x b. rewrite <- ret_hasvalue_iff.
+      specialize (Hf x). clear - Hf. destruct b, (f x); firstorder.
+    + eapply partial_decidable. 2: intros; eapply Hq.
+      intros.
+      edestruct (Htot (char_rel q)).
+      -- intros x0. cbv. setoid_rewrite reflects_iff.
+         exists (f x0). eapply Hf.
+      -- eapply Hr' in H0.  eexists. eassumption.
+         unfold pcomputes. intros.
+         rewrite <- ret_hasvalue_iff. cbn.
+         rewrite reflects_iff. red in Hf. unfold reflects in *.
+         rewrite Hf.
+         clear.
+         destruct (f x1), y; firstorder congruence.
 Qed.
 
 Goal forall X Y (p : X -> Prop) (q : Y -> Prop),
@@ -535,13 +555,6 @@ Proof.
   - eapply bind_hasvalue. eexists. split. eapply Hg'.
     eapply bind_hasvalue. eexists. split. eassumption. eapply ret_hasvalue.
 Qed.
-
-Lemma reflects_iff (b : bool) P :
-  (if b then P else ~ P) <-> reflects b P.
-Proof.
-  destruct b; firstorder.
-Qed.
-
 
 Lemma Forall2_total {X} {Y} (R : X -> Y -> Prop) :
   total R -> total (Forall2 R).
@@ -1350,6 +1363,38 @@ Proof.
   - reflexivity.
 Qed.
 
+Lemma bounded_Turing_Turing {X Y} (p : X -> Prop) (q : Y -> Prop) :
+  p ⪯ᴛb q -> p ⪯ᴛ q.
+Proof.
+  intros ([x1 x2 x3 x4 x5] & ?).
+  cbn in H.
+  unshelve eexists.
+  econstructor; cbn in *.
+  all: eauto.
+  intros. cprove eexists. intros. eapply x5; eauto.
+Qed.
+
+Lemma bienumerable_Turing {X Y} (p : X -> Prop) (q : Y -> Prop) :
+  eq_dec X ->
+  enumerable p -> enumerable (compl p) ->
+  p ⪯ᴛ q.
+Proof.
+  intros HX Hp Hq.
+  eapply bounded_Turing_Turing, bienumerable_bounded_Turing; eauto.
+Qed.
+
+Lemma decidable_Turing {X Y} (p : X -> Prop) (q : Y -> Prop) :
+  eq_dec X ->  enumerableᵗ X ->
+  decidable p ->
+  p ⪯ᴛ q.
+Proof.
+  intros.
+  eapply bienumerable_Turing.
+  - eauto.
+  - eapply decidable_enumerable. eauto. eauto.
+  - eapply decidable_enumerable. eapply decidable_complement. eauto. eauto.
+Qed.
+
 Lemma decidable_bounded_Turing_MP :
   (forall  (p : nat -> Prop) (q : nat -> Prop), p ⪯ᴛb q -> decidable q -> decidable p) ->
   MP.
@@ -1361,18 +1406,16 @@ Proof.
   exists (fun _ => true). cbv. firstorder.
 Qed.
 
-Lemma Bauer_to_Turing {X Y} (q : Y -> Prop) (p : X -> Prop) :
-  discrete X -> enumerableᵗ Y ->
-  p ⪯ʙ q -> p ⪯ᴛ q.
+Lemma decidable_Turing_MP :
+  (forall  (p : nat -> Prop) (q : nat -> Prop), p ⪯ᴛ q -> decidable q -> decidable p) ->
+  MP.
 Proof.
-  intros [Hd] % discrete_iff (fY & HY) (r & (e0' & e1' & He) & Hr).
-  eapply (mkTuring (fun R => @of_o _ (r (@to_o _ R)))).
-  - intros. eapply of_o_enumerator; eapply He; cbn.
-    all: apply pcomputes_enum; try eassumption; eauto.
-  - admit.
-  - admit.
-  - now rewrite to_o_char, <- Hr, of_o_char.
-Admitted.
+  intros H. eapply (Post_nempty_to_MP 0).
+  intros p ? % halting.semi_decidable_enumerable_iff_nat ? % halting.semi_decidable_enumerable_iff_nat. 
+  eapply H with (q := fun x => True).
+  eapply bienumerable_Turing; eauto.
+  exists (fun _ => true). cbv. firstorder.
+Qed.
 
 Lemma Turing_to_Bauer {X Y} (q : Y -> Prop) (p : X -> Prop) :
   enumerableᵗ X -> discrete Y ->
@@ -1491,18 +1534,6 @@ Section HS.
   Variable E_I_enum: strong_enumerator E_I I.
 
   Variable I_undec: ~ decidable I.
-
-  (* Lemma least_eq p k1 k2 n : *)
-  (*   least p n k1 -> least p n k2 -> k1 = k2. *)
-  (* Proof. *)
-  (*   intros (H1 & H2 & H3) (H4 & H5 & H6). *)
-  (*   assert (k1 < k2 \/ k1 = k2 \/ k2 < k1) as [H | [H | H]] by lia. *)
-  (*   - eapply H6 in H1; eauto; lia. *)
-  (*   - lia. *)
-  (*   - eapply H3 in H4; eauto; lia. *)
-  (* Qed. *)
-
-  (* Axiom falseAx : False. *)
 
   Lemma I_iff:
     ∀ z x : nat, ¬ HS E_I x → E_I x > z → I z ↔ In z (map E_I (seq 0 (x + 1))).
