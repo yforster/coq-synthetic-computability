@@ -773,6 +773,21 @@ Proof.
       Unshelve. exact bool. exact (fun _ => true). exact true.
 Qed.
 
+Definition continuuous (F : (nat -> nat) -> nat) :=
+  forall f, exists n, forall f', (forall x, x < n -> f x = f' x) -> F f = F f'.
+
+Definition continuuous' (F : (nat -> nat) -> nat) :=
+  forall f, exists l : list nat, forall f', (forall x, In x l -> f x = f' x) -> F f = F f'.
+
+
+
+
+
+
+
+
+
+
 
 (** * Turing reductions *)
 
@@ -786,10 +801,55 @@ Record Turing_red X Y :=
   }.
 
 Definition continuous {X Y Z1 Z2} (r : FunRel Y Z1 -> FunRel X Z2) :=
-  forall (R : FunRel Y Z1) (x : X), ~~ exists L, forall R' : FunRel Y Z1, (forall y b, In y L -> R y b -> R' y b) -> forall b : Z2, r R x b -> r R' x b.
+  forall (R : FunRel Y Z1) (x : X), exists L, forall R' : FunRel Y Z1, (forall y b, In y L -> R y b -> R' y b) -> forall b : Z2, r R x b -> r R' x b.
 
 Definition monotonic {X Y Z1 Z2} (r : FunRel Y Z1 -> FunRel X Z2) :=
   forall (R R' : FunRel Y Z1), (forall x b, R x b -> R' x b) -> forall x b, r R x b -> r R' x b.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Lemma extension_ex {X Y} (red_fun_partT : (Y ↛ bool) -> (X ↛ bool)) :
+  exists red_fun_relT : FunRel Y bool -> FunRel X bool,
+    (forall f R, pcomputes f (the_rel R) -> pcomputes (red_fun_partT f) (red_fun_relT R))
+    /\ continuous red_fun_relT 
+    /\ monotonic red_fun_relT .
+Proof.
+  rename red_fun_partT into F.
+  unshelve eexists. 2: repeat eapply conj.
+  - intros R. unshelve econstructor.
+    + intros x b.
+      exact (exists f, pcomputes f R /\ F f x =! b).
+    + intros x b1 b2 [f1 [H1 H2]] [f2 [H3 H4]].
+      admit.
+  - cbn. intros f R Hf x b. firstorder.
+    admit.
+  - red. cbn. intros R x.
+    cprove exists []. intros R' HL b [f [H1 H2]].
+    exists f.
+
+    ccase (exists f, pcomputes f R) as [[f H] | H].
+    + admit.
+    + cprove exists []. intros. 
 
 Program Definition fin_to_rel {X Y} {Heq : eq_dec X} (l : list (X * Y)) :=
   @Build_FunRel _ _ (fun x y => exists i, @pos X Heq x (map fst l) = Some i /\
@@ -858,6 +918,8 @@ Proof.
       eapply Hm. exact H2. firstorder.
     + cprove eapply G. exists []. intros. destruct Hx. firstorder.
 Qed.
+
+
 
 Definition red_Turing {X Y} (p : X -> Prop) (q : Y -> Prop) :=
   exists r : Turing_red X Y, char_rel p = r (char_rel q). 
