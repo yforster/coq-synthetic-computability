@@ -28,6 +28,9 @@ Notation "a ≡ b" := (equiv a b) (at level 50).
 Definition is_modulus (M : B -> nat) (F : B -> nat) :=
   (forall f, forall g, Forall (fun x => f x = g x) (seq 0 (M f)) -> F f = F g).
 
+Definition continuous (F : B -> nat) :=
+  (forall f, exists m, forall g, Forall (fun x => f x = g x) (seq 0 m) -> F f = F g).
+
 Variable dec : nat -> list nat * nat.
 Variable code : list nat -> nat -> nat.
 Variable dec_spec : forall l m, dec (code l m) = (l, m).
@@ -56,7 +59,7 @@ Definition apply (α : B) (β : B) : part nat :=
 Lemma apply_spec :
   forall F M : B -> nat,
     is_modulus M F ->
-    is_modulus M M ->
+    continuous M ->
     exists α, forall β, apply α β =! F β.
 Proof.
   intros F M Hcont HcontM.
@@ -67,25 +70,27 @@ Proof.
            code (μ f_n) (F f_n)).
   intros β.
   unfold apply. eapply thefirst_spec; setoid_rewrite dec_spec.
-  2:{ 
-    destruct (enum_spec (μ β)) as [n Hn].
+  2:{
+    destruct (HcontM β) as [m Hm].
+    destruct (enum_spec (map β (seq 0 (M β + m)))) as [n Hn].
     exists n. rewrite <- !Hn. clear Hn.
-    assert (is_prefix (μ (fun x : nat => nth x (μ β) 0)) β = true) as ->. {
+    assert (is_prefix (μ (fun x : nat => nth x (map β (seq 0 (M β + m))) 0)) β = true) as ->. {
       eapply is_prefix_spec. red.
       unfold μ. rewrite map_length, seq_length.
       eapply map_seq_eq. intros i [_ Hi].
-      unfold μ. eapply app_seq_eq.
+      eapply app_seq_eq.
       eapply lt_le_trans. eauto.
-      rewrite <- (HcontM β). lia.
+      rewrite <- Hm. lia.
       eapply Forall_forall. intros x Hx % in_seq.
       eapply app_seq_eq. lia.
     }
-    f_equal. unfold μ. 
+    f_equal. unfold μ.
     symmetry. eapply (Hcont β).
     eapply Forall_forall.
     intros x Hx % in_seq.
     eapply app_seq_eq. lia.
   }
+  clear HcontM.
   intros n1 n2 x1 x2 H1 H2.
   destruct is_prefix eqn:E1; inversion H1; subst; clear H1.
   destruct (is_prefix (μ (fun x : nat => nth x (enum n2) 0)) β)
