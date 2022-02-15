@@ -44,18 +44,40 @@ Definition prefix (l : list nat) (β : B) :=
 Variable is_prefix : list nat -> B -> bool.
 Variable is_prefix_spec : forall l β, prefix l β <-> is_prefix l β = true.
 
-Variable thefirst : forall {X}, (nat -> option X) ↛ X.
-Hypothesis thefirst_spec :
+Definition thefirst : forall {X}, (nat -> option X) ↛ X :=
+  fun X f =>
+    bind (mu_tot (fun n => match f n with None => false | _ => true end))
+         (fun n => match f n with None => undef | Some x => ret x end).
+
+Lemma thefirst_spec :
   forall X f (x : X),
     (forall n1 n2 x1 x2, f n1 = Some x1 -> f n2 = Some x2 -> x1 = x2) ->
     (exists n, f n = Some x) <-> thefirst f =! x.
+Proof.
+  intros X f x Hdet. unfold thefirst.
+  rewrite bind_hasvalue.
+  split.
+  - intros [n Hn].
+    edestruct mu_tot_ter as [v Hv].
+    2:{ eapply mu_tot_hasvalue in Hv as Hv'.
+        exists v. split. eapply Hv.
+        cbn in *. destruct Hv' as [Hv' _].
+        destruct (f v) eqn:E; try congruence.
+        eapply ret_hasvalue_iff. eauto.
+    }
+    cbn. now rewrite Hn.
+  - intros [a [[H1 H2] % mu_tot_hasvalue H3]].
+    exists a. destruct (f a) eqn:E; try congruence.
+    eapply ret_hasvalue_iff in H3 as ->.
+    f_equal; eauto.
+Qed.
 
 Definition apply (α : B) (β : B) : part nat :=
   thefirst (fun i => let (l, m) := dec (α i) in
         if is_prefix l β
         then Some m
         else None).
-  
+
 Lemma apply_spec :
   forall F M : B -> nat,
     is_modulus M F ->
@@ -134,5 +156,3 @@ Proof.
     rewrite <- map_seq_eq in E3.
     symmetry. eapply E1. eauto.
 Qed.
-
-
