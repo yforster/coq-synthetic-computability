@@ -2,21 +2,21 @@ From Undecidability Require Import partial.
 Require Import List Lia PeanoNat.
 Import Nat.
 
-Lemma map_seq_eq {X} (f1 f2 : nat -> X) k n :
-  (forall i, k <= i < n -> f1 i = f2 i) <->
-  map f1 (seq k n) = map f2 (seq k n).
-Admitted.
+(* Lemma map_seq_eq {X} (f1 f2 : nat -> X) k n : *)
+(*   (forall i, k <= i < n -> f1 i = f2 i) <-> *)
+(*   map f1 (seq k n) = map f2 (seq k n). *)
+(* Admitted. *)
 
 Lemma app_seq_eq {X} (β : nat -> X) k i x :
   i < k ->
   β i = nth i (map β (seq 0 k)) x.
 Admitted.
 
-Lemma app_length_inv {X} (l1 l2 l3 l4 : list X) :
-  length l1 = length l2 -> l1 ++ l3 = l2 ++ l4 ->
-  l1 = l2 /\ l3 = l4.
-Proof.
-Admitted.
+(* Lemma app_length_inv {X} (l1 l2 l3 l4 : list X) : *)
+(*   length l1 = length l2 -> l1 ++ l3 = l2 ++ l4 -> *)
+(*   l1 = l2 /\ l3 = l4. *)
+(* Proof. *)
+(* Admitted. *)
 
 Section sec.
 
